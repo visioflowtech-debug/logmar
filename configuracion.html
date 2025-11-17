@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración del Sistema</title>
+    <link rel="stylesheet" href="configuracion.css">
+
+    <script src="config.js"></script>
+    <script src="configuracion.js" defer></script>
+</head>
+<body>
+
+    <div class="config-container">
+        <h1>Configuración del Sistema</h1>
+        
+        <form id="config-form">
+
+            <fieldset>
+                <legend>Calibración de Pantalla</legend>
+                <div class="form-group">
+                    <label for="anchoPantallaCm">Ancho Físico (cm):</label>
+                    <input type="number" step="0.1" id="anchoPantallaCm" required>
+                </div>
+                <div class="form-group">
+                    <label for="resolucionAnchoPx">Resolución Horizontal (px):</label>
+                    <input type="number" step="1" id="resolucionAnchoPx" required>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Ajustes de Prueba</legend>
+                <div class="form-group">
+                    <label for="distanciaMetros">Distancia de Examen (m):</label>
+                    <input type="number" step="0.1" id="distanciaMetros" required>
+                </div>
+                <div class="form-group">
+                    <label for="valorLogMarInicial">LogMAR Inicial (Cartillas):</label>
+                    <input type="number" step="0.1" id="valorLogMarInicial" required>
+                </div>
+                <div class="form-group">
+                    <label for="duochromeInitialLogMar">LogMAR Inicial (Dúo-Cromo):</label>
+                    <input type="number" step="0.1" id="duochromeInitialLogMar" required>
+                </div>
+            </fieldset>
+
+            <button type="submit">Guardar Cambios</button>
+            <span id="status-message"></span>
+
+        </form>
+
+        <a href="index.html" class="back-link">Volver a la Cartilla</a>
+    </div>
+
+</body>
+</html>
