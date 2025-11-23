@@ -235,6 +235,201 @@ body.dark-background {
     width: 0.8vmin;
     height: 0.8vmin;
     background-color: black;
+    font-family: 'OpticianSans', 'Courier New', monospace;
+}
+
+#etdrs-line-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.4em;
+    /* Reducido de 1em a 0.4em para menor separación */
+    transform-origin: center;
+    transition: transform 0.1s ease-out;
+    white-space: nowrap;
+}
+
+/* --- ESTILOS DUO-CROMO --- */
+#duochrome-chart {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    color: black;
+    font-weight: normal;
+    font-family: 'OpticianSans', 'Courier New', monospace;
+    align-items: stretch;
+    /* Asegura que los lados llenen la altura */
+}
+
+#red-side {
+    flex: 1;
+    /* Ocupa el 50% exacto */
+    background-color: rgb(255, 0, 0);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0.2em;
+    height: 100%;
+}
+
+#green-side {
+    flex: 1;
+    /* Ocupa el 50% exacto */
+    background-color: rgb(0, 150, 0);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0.2em;
+    height: 100%;
+}
+
+#red-side span,
+#green-side span {
+    display: inline-block;
+}
+
+
+/* --- ESTILOS RELOJ ASTIGMÁTICO --- */
+#astigmatism-chart {
+    position: relative;
+    width: 50vmin;
+    height: 50vmin;
+}
+
+#clock-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 15vmin;
+    height: 15vmin;
+    background-color: white;
+    border-radius: 50%;
+    z-index: 10;
+}
+
+.line-group {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform-origin: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 3px;
+}
+
+.line-group .line {
+    width: 100%;
+    height: 2px;
+    background-color: black;
+}
+
+#clock-numbers {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: scale(1.4);
+    z-index: 5;
+}
+
+.number-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    transform-origin: center;
+}
+
+.number-text {
+    font-family: Arial, sans-serif;
+    font-size: 2.0vmin;
+    font-weight: bold;
+    color: black;
+}
+
+
+/* --- ESTILOS TEST DE WORTH --- */
+#worth-test {
+    position: relative;
+    width: 20vmin;
+    height: 25vmin;
+    background-color: transparent;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.worth-dot {
+    position: absolute;
+    width: 8vmin;
+    height: 8vmin;
+    border-radius: 50%;
+    box-shadow: 0 0 10px 3px rgba(255, 255, 255, 0.4);
+}
+
+.worth-dot.red {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgb(255, 0, 0);
+}
+
+.worth-dot.green {
+    top: 8.5vmin;
+    background-color: rgb(0, 150, 0);
+}
+
+.worth-dot.left {
+    left: 0;
+}
+
+.worth-dot.right {
+    right: 0;
+}
+
+.worth-dot.white {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: white;
+}
+
+/* --- ESTILOS REJILLA DE AMSLER --- */
+#amsler-grid {
+    position: relative;
+    width: 50vmin;
+    /* Un cuadrado grande */
+    height: 50vmin;
+    background-color: white;
+    border: 2px solid black;
+
+    /* Dibujamos la rejilla con gradientes CSS */
+    background-image:
+        linear-gradient(to right, #555 1px, transparent 1px),
+        /* Líneas verticales */
+        linear-gradient(to bottom, #555 1px, transparent 1px);
+    /* Líneas horizontales */
+
+    background-size: 2.5vmin 2.5vmin;
+}
+
+.amsler-center-dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 0.8vmin;
+    height: 0.8vmin;
+    background-color: black;
     border-radius: 50%;
 }
 
@@ -262,52 +457,150 @@ body.dark-background {
     padding-right: 15px;
 }
 
-
 /* --- ESTILO PARA EL LINK DE CONFIGURACIÓN --- */
 #config-link {
     position: absolute;
     bottom: 10px;
     left: 10px;
-    z-index: 1001;
-    /* Asegura que esté sobre todo */
-}
-
-#config-link a {
-    font-size: 24px;
-    /* Tamaño del ícono */
-    color: #000;
-    /* Color del ícono */
-    text-decoration: none;
-    opacity: 0.2;
-    /* ¡MUY SUTIL! */
-    transition: opacity 0.3s;
-}
-
-#config-link a:hover {
-    opacity: 1.0;
-    /* Totalmente visible al pasar el mouse */
-}
-
-/* --- ESTILOS PARA LA INFO DE DEPURACIÓN --- */
-#debug-info {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
     background-color: rgba(0, 0, 0, 0.6);
-    /* Un poco más transparente */
     color: #bbb;
-    /* Un gris claro, menos distractor */
     font-family: 'Courier New', monospace;
     font-size: 12px;
     padding: 5px 10px;
     border-radius: 4px;
     z-index: 1000;
     opacity: 0.8;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+#debug-info {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: #858282;
     pointer-events: none;
-    /* Para que no interfiera con el mouse */
+    z-index: 90;
+    text-align: right;
 }
 
 /* --- MODO ESPEJO --- */
 body.mirrored {
     transform: scaleX(-1);
+}
+
+/* --- LICENSE OVERLAY --- */
+#license-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.95);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+#license-overlay.hidden {
+    display: none !important;
+}
+
+.license-card {
+    background: #1a1a1a;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    border: 1px solid #333;
+    color: #fff;
+}
+
+.license-card h2 {
+    margin-top: 0;
+    color: #fff;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.license-card p {
+    color: #aaa;
+    margin-bottom: 1.5rem;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1rem;
+}
+
+#license-key {
+    flex: 1;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #000;
+    color: #fff;
+    font-family: monospace;
+    text-transform: uppercase;
+}
+
+#verify-license-btn {
+    padding: 10px 20px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+#verify-license-btn:hover {
+    background: #0056b3;
+}
+
+.license-message {
+    min-height: 20px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.license-message.error {
+    color: #ff4444;
+}
+
+.license-message.success {
+    color: #00C851;
+}
+
+.license-message.info {
+    color: #33b5e5;
+}
+
+.license-footer {
+    border-top: 1px solid #333;
+    padding-top: 1rem;
+    font-size: 0.8rem;
+}
+
+.license-footer a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.license-footer a:hover {
+    text-decoration: underline;
+}
+
+.test-hint {
+    display: block;
+    margin-top: 0.5rem;
+    color: #555;
+    font-family: monospace;
 }

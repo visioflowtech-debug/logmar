@@ -248,6 +248,11 @@ const KEY = {
 };
 
 window.addEventListener('keydown', function (event) {
+    // Verificar licencia antes de permitir interacción
+    if (typeof LicenseManager !== 'undefined' && !LicenseManager.isActivated()) {
+        return;
+    }
+
     const currentMode = modosDePantalla[indiceModoActual];
     const oldMode = currentMode;
 

@@ -160,6 +160,27 @@
 
     </div>
 
+    <!-- OVERLAY DE LICENCIA -->
+    <div id="license-overlay" class="hidden">
+        <div class="license-card">
+            <h2>LogMAR Pro</h2>
+            <p>Por favor ingresa tu clave de licencia para continuar.</p>
+
+            <div class="input-group">
+                <input type="text" id="license-key" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX">
+                <button id="verify-license-btn">Activar</button>
+            </div>
+
+            <div id="license-message" class="license-message"></div>
+
+            <div class="license-footer">
+                <p>¿No tienes una licencia? <a href="#" target="_blank">Comprar ahora</a></p>
+                <small class="test-hint">Clave de prueba: IT-WORKS-PERFECTLY</small>
+            </div>
+        </div>
+    </div>
+
+    <script src="license.js"></script>
 </body>
 
 </html>
