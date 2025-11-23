@@ -1,21 +1,21 @@
-<!DOCTYPE html>
-<html lang="es">
+<title>Sistema Visual Completo</title>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Visual Completo</title>
-
-    <link rel="stylesheet" href="style.css">
-    <script src="config.js?v=15"></script>
-    <script src="chart_logic.js"></script>
-    <script src="main.js" defer></script>
+<link rel="stylesheet" href="style.css">
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script src="config.js?v=15"></script>
+<script src="chart_logic.js"></script>
+<script src="main.js" defer></script>
 </head>
 
 <body>
 
     <div id="config-link">
         <a href="configuracion.html" title="Ir a Configuración">&#9881;</a>
+    </div>
+
+    <div id="remote-link"
+        style="position: absolute; bottom: 10px; left: 60px; background-color: rgba(0, 0, 0, 0.6); color: #bbb; font-family: 'Courier New', monospace; font-size: 20px; padding: 5px 10px; border-radius: 4px; z-index: 1000; opacity: 0.8; cursor: pointer;">
+        <span title="Control Remoto">📱</span>
     </div>
 
     <div id="info">
@@ -177,6 +177,29 @@
                 <p>¿No tienes una licencia? <a href="#" target="_blank">Comprar ahora</a></p>
                 <small class="test-hint">Clave de prueba: IT-WORKS-PERFECTLY</small>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL CONTROL REMOTO -->
+    <div id="remote-modal" class="hidden"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); display: none; justify-content: center; align-items: center; z-index: 2000;">
+        <div
+            style="background: #1a1a1a; padding: 30px; border-radius: 12px; text-align: center; color: white; border: 1px solid #333; max-width: 400px;">
+            <h2 style="margin-top: 0;">Control Remoto</h2>
+            <p style="color: #aaa;">Escanea el QR o ingresa el código en tu celular.</p>
+
+            <div style="background: white; padding: 10px; display: inline-block; margin: 20px 0;">
+                <img id="remote-qr" src="" alt="QR Code" width="150" height="150">
+            </div>
+
+            <div style="font-size: 40px; font-family: monospace; letter-spacing: 5px; color: #007bff; font-weight: bold; margin-bottom: 20px;"
+                id="remote-id-display">----</div>
+
+            <p style="font-size: 14px; color: #666;">En tu celular ve a: <br> <span id="remote-url-display"
+                    style="color: #fff;">...</span></p>
+
+            <button id="close-remote-modal"
+                style="background: #333; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 10px;">Cerrar</button>
         </div>
     </div>
 

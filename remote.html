@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LogMAR Remote</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-color: #007bff;
+            --text-color: #ffffff;
+            --danger-color: #dc3545;
+            --success-color: #28a745;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation;
+            /* Improves touch response */
+        }
+
+        /* --- LOGIN SCREEN --- */
+        #login-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            padding: 20px;
+            text-align: center;
+        }
+
+        input {
+            background: var(--surface-color);
+            border: 1px solid #333;
+            color: white;
+            padding: 15px;
+            font-size: 24px;
+            border-radius: 8px;
+            text-align: center;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            width: 200px;
+            letter-spacing: 5px;
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        /* --- REMOTE INTERFACE --- */
+        #remote-interface {
+            display: none;
+            /* Hidden by default */
+            flex-direction: column;
+            height: 100%;
+            padding: 10px;
+            gap: 10px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+            background: var(--surface-color);
+            border-radius: 8px;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--danger-color);
+        }
+
+        .status-indicator.connected {
+            background-color: var(--success-color);
+        }
+
+        /* Grid Layout for Controls */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            flex: 1;
+        }
+
+        .btn {
+            background: var(--surface-color);
+            border: 1px solid #333;
+            border-radius: 12px;
+            color: white;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn:active {
+            background: #333;
+        }
+
+        .btn-large {
+            grid-column: span 3;
+            background: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .btn-icon {
+            font-size: 30px;
+        }
+
+        .section-title {
+            grid-column: span 3;
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        /* Specific Button Colors */
+        .btn-red {
+            background: #4a1a1a;
+            border-color: #ff0000;
+        }
+
+        .btn-green {
+            background: #1a4a1a;
+            border-color: #00ff00;
+        }
+
+        .btn-mirror {
+            background: #1a1a4a;
+            border-color: #0088ff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="login-screen">
+        <h1>LogMAR Remote</h1>
+        <p>Ingresa el ID de la pantalla</p>
+        <input type="text" id="host-id-input" placeholder="ABCD" maxlength="4">
+        <button id="connect-btn">Conectar</button>
+        <p id="connection-status" style="margin-top: 20px; color: #888;"></p>
+    </div>
+
+    <div id="remote-interface">
+        <div class="header">
+            <span>Conectado a: <strong id="connected-host">...</strong></span>
+            <div id="status-dot" class="status-indicator"></div>
+        </div>
+
+        <div class="controls-grid">
+            <!-- Navigation -->
+            <div class="section-title">Navegación</div>
+            <div class="btn" onclick="sendCommand('prev_optotype')">◀</div>
+            <div class="btn" onclick="sendCommand('randomize')">🎲</div>
+            <div class="btn" onclick="sendCommand('next_optotype')">▶</div>
+
+            <!-- Size -->
+            <div class="section-title">Tamaño</div>
+            <div class="btn" onclick="sendCommand('decrease_size')">➖</div>
+            <div class="btn btn-large" style="grid-column: span 1; font-size: 14px;"
+                onclick="sendCommand('reset_size')">RESET</div>
+            <div class="btn" onclick="sendCommand('increase_size')">➕</div>
+
+            <!-- Optotypes -->
+            <div class="section-title">Optotipos</div>
+            <div class="btn" onclick="sendCommand('set_type', 'sloan')">ABC</div>
+            <div class="btn" onclick="sendCommand('set_type', 'numbers')">123</div>
+            <div class="btn" onclick="sendCommand('set_type', 'landolt')">C</div>
+            <div class="btn" onclick="sendCommand('set_type', 'e_chart')">E</div>
+            <div class="btn" onclick="sendCommand('set_type', 'allen')">🧸</div>
+            <div class="btn" onclick="sendCommand('set_type', 'forms')">⭕</div>
+
+            <!-- Tools -->
+            <div class="section-title">Herramientas</div>
+            <div class="btn btn-red" onclick="sendCommand('toggle_red_green')">R/G</div>
+            <div class="btn btn-mirror" onclick="sendCommand('toggle_mirror')">Espejo</div>
+            <div class="btn" onclick="sendCommand('toggle_mask')">Masc.</div>
+        </div>
+    </div>
+
+    <script src="remote.js"></script>
+</body>
+
+</html>

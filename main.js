@@ -1,21 +1,38 @@
 // En: main.js
 
+// Helper para parsear JSON de forma segura
+function safeJsonParse(key, defaultValue) {
+    try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : defaultValue;
+    } catch (e) {
+        console.error(`Error parsing ${key} from localStorage:`, e);
+        return defaultValue;
+    }
+}
+
+// Verificar que CONFIG existe
+if (typeof CONFIG === 'undefined') {
+    console.error("CONFIG object not found! Check config.js");
+    alert("Error: No se pudo cargar la configuración. Verifique config.js");
+}
+
 // --- ¡¡NUEVO!! Objeto de Configuración "Vivo" ---
 const settings = {
-    anchoPantallaCm: parseFloat(localStorage.getItem('anchoPantallaCm') || CONFIG.anchoPantallaCm),
-    resolucionAnchoPx: parseFloat(localStorage.getItem('resolucionAnchoPx') || CONFIG.resolucionAnchoPx),
-    distanciaMetros: parseFloat(localStorage.getItem('distanciaMetros') || CONFIG.distanciaMetros),
-    valorLogMarInicial: parseFloat(localStorage.getItem('valorLogMarInicial') || CONFIG.valorLogMarInicial),
-    duochromeInitialLogMar: parseFloat(localStorage.getItem('duochromeInitialLogMar') || CONFIG.duochromeInitialLogMar),
-    pasoLogMar: CONFIG.pasoLogMar,
-    calibrationFactor: parseFloat(localStorage.getItem('calibrationFactor') || CONFIG.calibrationFactor),
-    enabledLogMarValues: JSON.parse(localStorage.getItem('enabledLogMarValues')) || CONFIG.DEFAULT_ENABLED_LOGMAR,
-    CARTILLAS_ETDRS: CONFIG.CARTILLAS_ETDRS,
-    CARTILLAS_NUMEROS: CONFIG.CARTILLAS_NUMEROS,
-    DUOCHROME_LETTERS: CONFIG.DUOCHROME_LETTERS,
+    anchoPantallaCm: parseFloat(localStorage.getItem('anchoPantallaCm') || (typeof CONFIG !== 'undefined' ? CONFIG.anchoPantallaCm : 52.5)),
+    resolucionAnchoPx: parseFloat(localStorage.getItem('resolucionAnchoPx') || (typeof CONFIG !== 'undefined' ? CONFIG.resolucionAnchoPx : 1920)),
+    distanciaMetros: parseFloat(localStorage.getItem('distanciaMetros') || (typeof CONFIG !== 'undefined' ? CONFIG.distanciaMetros : 6.0)),
+    valorLogMarInicial: parseFloat(localStorage.getItem('valorLogMarInicial') || (typeof CONFIG !== 'undefined' ? CONFIG.valorLogMarInicial : 1.0)),
+    duochromeInitialLogMar: parseFloat(localStorage.getItem('duochromeInitialLogMar') || (typeof CONFIG !== 'undefined' ? CONFIG.duochromeInitialLogMar : 0.6)),
+    pasoLogMar: (typeof CONFIG !== 'undefined' ? CONFIG.pasoLogMar : 0.1),
+    calibrationFactor: parseFloat(localStorage.getItem('calibrationFactor') || (typeof CONFIG !== 'undefined' ? CONFIG.calibrationFactor : 1.0)),
+    enabledLogMarValues: safeJsonParse('enabledLogMarValues', (typeof CONFIG !== 'undefined' ? CONFIG.DEFAULT_ENABLED_LOGMAR : [])),
+    CARTILLAS_ETDRS: (typeof CONFIG !== 'undefined' ? CONFIG.CARTILLAS_ETDRS : {}),
+    CARTILLAS_NUMEROS: (typeof CONFIG !== 'undefined' ? CONFIG.CARTILLAS_NUMEROS : {}),
+    DUOCHROME_LETTERS: (typeof CONFIG !== 'undefined' ? CONFIG.DUOCHROME_LETTERS : "O C"),
 
     // --- Configuración de Espejo ---
-    isMirrored: JSON.parse(localStorage.getItem('isMirrored')) || false
+    isMirrored: safeJsonParse('isMirrored', false)
 };
 
 // --- 1. VARIABLES DE ESTADO Y REFERENCIAS AL DOM ---
@@ -88,9 +105,14 @@ const etdrsDisplayRules = {
 
 // --- 2. FUNCIÓN PRINCIPAL DE ACTUALIZACIÓN ---
 function actualizarPantalla() {
+    console.log("actualizarPantalla() ejecutándose...");
     const modoActual = modosDePantalla[indiceModoActual];
+    console.log("Modo Actual:", modoActual);
+    console.log("Valor LogMAR:", valorLogMarActual);
+
     const esModoETDRS = settings.CARTILLAS_ETDRS[modoActual] ||
         settings.CARTILLAS_NUMEROS[modoActual];
+    console.log("Es Modo ETDRS/Numeros:", !!esModoETDRS);
 
     const esPruebaLogMAR = esModoETDRS || modoActual === "Duo-Cromo";
 
@@ -101,60 +123,67 @@ function actualizarPantalla() {
     etdrsChart.classList.add('hidden');
 
     if (esModoETDRS) {
-        renderEtdrs(modoActual);
+        console.log("Renderizando ETDRS...");
+        // La lógica de renderizado está más abajo
     } else if (modeElements[modoActual]) {
+        console.log("Mostrando elemento de modo:", modoActual);
         modeElements[modoActual].classList.remove('hidden');
         if (modoActual === "Duo-Cromo") {
             renderDuochrome();
         }
     }
 
-    if (esPruebaLogMAR) {
-        updateHud(modoActual);
-    }
-}
+    if (esModoETDRS) {
+        etdrsChart.classList.remove('hidden');
+        const nuevoTamanoPx = calcularTamanoLogMAR(valorLogMarActual, settings);
+        console.log("Nuevo Tamaño Px:", nuevoTamanoPx);
+        etdrsChart.style.fontSize = `${nuevoTamanoPx}px`;
+        etdrsChart.style.letterSpacing = "normal";
 
-// --- FUNCIONES DE RENDERIZADO ---
-function renderEtdrs(modoActual) {
-    etdrsChart.classList.remove('hidden');
-    const nuevoTamanoPx = calcularTamanoLogMAR(valorLogMarActual, settings);
-    etdrsChart.style.fontSize = `${nuevoTamanoPx}px`;
-    etdrsChart.style.letterSpacing = "normal";
+        const cartillaActual = settings.CARTILLAS_ETDRS[modoActual] ||
+            settings.CARTILLAS_NUMEROS[modoActual];
 
-    const cartillaActual = settings.CARTILLAS_ETDRS[modoActual] ||
-        settings.CARTILLAS_NUMEROS[modoActual];
+        if (!cartillaActual) {
+            console.error("No se encontró cartilla para:", modoActual);
+            return;
+        }
 
-    let indiceDeLinea = Math.round(10 - (valorLogMarActual * 10));
-    indiceDeLinea = Math.max(0, Math.min(cartillaActual.length - 1, indiceDeLinea));
+        let indiceDeLinea = Math.round(10 - (valorLogMarActual * 10));
+        indiceDeLinea = Math.max(0, Math.min(cartillaActual.length - 1, indiceDeLinea));
+        console.log("Índice de línea:", indiceDeLinea);
 
-    // Lógica de aleatorización
-    let lineContent = "";
-    if (randomizedLines[valorLogMarActual.toFixed(1)]) {
-        lineContent = randomizedLines[valorLogMarActual.toFixed(1)];
-    } else {
-        lineContent = cartillaActual[indiceDeLinea];
-    }
+        // Lógica de aleatorización
+        let lineContent = "";
+        if (randomizedLines[valorLogMarActual.toFixed(1)]) {
+            lineContent = randomizedLines[valorLogMarActual.toFixed(1)];
+        } else {
+            lineContent = cartillaActual[indiceDeLinea];
+        }
+        console.log("Contenido de línea:", lineContent);
 
-    const items = lineContent.split(' ');
+        const items = lineContent.split(' ');
 
-    etdrsLetrasElements.forEach(el => el.style.display = 'none');
+        etdrsLetrasElements.forEach(el => el.style.display = 'none');
 
-    const rule = etdrsDisplayRules[valorLogMarActual.toFixed(1)] || (valorLogMarActual < 0.1 ? [8, 0] : [5, 0]);
-    const [count, start] = rule;
+        const rule = etdrsDisplayRules[valorLogMarActual.toFixed(1)] || (valorLogMarActual < 0.1 ? [8, 0] : [5, 0]);
+        const [count, start] = rule;
+        console.log("Regla de visualización:", rule);
 
-    for (let i = 0; i < count; i++) {
-        const itemIndex = start + i;
-        const elementIndex = start + i;
-        if (items[itemIndex] && etdrsLetrasElements[elementIndex]) {
-            const char = items[itemIndex];
-            const el = etdrsLetrasElements[elementIndex];
+        for (let i = 0; i < count; i++) {
+            const itemIndex = start + i;
+            const elementIndex = start + i;
+            if (items[itemIndex] && etdrsLetrasElements[elementIndex]) {
+                const char = items[itemIndex];
+                const el = etdrsLetrasElements[elementIndex];
 
-            el.textContent = char; // Renderizar texto normal
-            el.style.display = 'inline';
+                el.textContent = char; // Renderizar texto normal
+                el.style.display = 'inline';
+            }
         }
     }
 
     requestAnimationFrame(adjustContentScale);
+    updateHud(modoActual);
 }
 
 function renderDuochrome() {
@@ -311,4 +340,208 @@ window.addEventListener('keydown', function (event) {
 });
 
 window.addEventListener('resize', adjustContentScale);
-window.onload = actualizarPantalla;
+window.addEventListener('load', actualizarPantalla);
+
+// --- CONTROL REMOTO (PeerJS) ---
+const RemoteControl = {
+    peer: null,
+    conn: null,
+    hostId: null,
+
+    init() {
+        console.log("RemoteControl.init() called");
+        // Ensure DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.setup());
+        } else {
+            this.setup();
+        }
+    },
+
+    setup() {
+        console.log("RemoteControl.setup() called");
+        // Generar ID corto aleatorio (4 caracteres)
+        this.hostId = this.generateShortId();
+
+        // UI References
+        const remoteLink = document.getElementById('remote-link');
+        const remoteModal = document.getElementById('remote-modal');
+        const closeRemoteModal = document.getElementById('close-remote-modal');
+        const remoteIdDisplay = document.getElementById('remote-id-display');
+        const remoteUrlDisplay = document.getElementById('remote-url-display');
+        const remoteQr = document.getElementById('remote-qr');
+
+        if (!remoteLink || !remoteModal) {
+            console.error("Remote Control UI elements not found!");
+            return;
+        }
+
+        console.log("Remote Control UI elements found. Attaching listener...");
+
+        // Event Listeners UI
+        remoteLink.addEventListener('click', () => {
+            console.log("Remote icon clicked!");
+            this.startHost();
+
+            // Mostrar modal (quitando clase hidden y forzando display)
+            remoteModal.classList.remove('hidden');
+            remoteModal.style.display = 'flex';
+
+            remoteIdDisplay.textContent = this.hostId;
+
+            // Generar URL para el QR (asumiendo que remote.html está en la misma carpeta)
+            const currentUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/')) + '/remote.html';
+            remoteUrlDisplay.textContent = currentUrl;
+
+            // Generar QR (usando API pública para demo, idealmente usar librería local)
+            remoteQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`;
+        });
+
+        closeRemoteModal.addEventListener('click', () => {
+            remoteModal.classList.add('hidden');
+            remoteModal.style.display = 'none';
+        });
+    },
+
+    generateShortId() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Sin I, 1, O, 0 para evitar confusión
+        let result = '';
+        for (let i = 0; i < 4; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    },
+
+    startHost() {
+        if (this.peer) return; // Ya iniciado
+        if (typeof Peer === 'undefined') {
+            console.error("PeerJS library not loaded!");
+            alert("Error: PeerJS no está cargado. Verifique su conexión a internet.");
+            return;
+        }
+
+        // Prefijo para evitar colisiones globales en el servidor público
+        const fullId = "logmar-app-" + this.hostId;
+
+        this.peer = new Peer(fullId, {
+            debug: 2
+        });
+
+        this.peer.on('open', (id) => {
+            console.log('Remote Host Ready. ID:', this.hostId);
+        });
+
+        this.peer.on('connection', (conn) => {
+            console.log('Remote connected!');
+            this.conn = conn;
+
+            conn.on('data', (data) => {
+                console.log('Received:', data);
+                this.handleCommand(data);
+            });
+        });
+
+        this.peer.on('error', (err) => {
+            console.error('PeerJS Error:', err);
+            if (err.type === 'unavailable-id') {
+                // Si el ID ya existe, generar otro y reintentar (raro con 4 chars pero posible)
+                this.hostId = this.generateShortId();
+                this.peer = null;
+                this.startHost();
+            }
+        });
+    },
+
+    handleCommand(data) {
+        // Verificar licencia
+        if (typeof LicenseManager !== 'undefined' && !LicenseManager.isActivated()) return;
+
+        switch (data.action) {
+            case 'increase_size':
+                changeLogMarStep(1);
+                actualizarPantalla();
+                break;
+            case 'decrease_size':
+                changeLogMarStep(-1);
+                actualizarPantalla();
+                break;
+            case 'reset_size':
+                valorLogMarActual = settings.valorLogMarInicial;
+                actualizarPantalla();
+                break;
+            case 'next_optotype':
+                indiceModoActual++;
+                if (indiceModoActual >= modosDePantalla.length) indiceModoActual = 0;
+                randomizedLines = {};
+                actualizarPantalla();
+                break;
+            case 'prev_optotype':
+                indiceModoActual--;
+                if (indiceModoActual < 0) indiceModoActual = modosDePantalla.length - 1;
+                randomizedLines = {};
+                actualizarPantalla();
+                break;
+            case 'randomize':
+                // Simular tecla 'r'
+                const event = new KeyboardEvent('keydown', { key: 'r' });
+                window.dispatchEvent(event);
+                break;
+            case 'toggle_mirror':
+                toggleMirrorMode();
+                break;
+            case 'toggle_red_green':
+                // Buscar modo Duo-Cromo
+                const duoIndex = modosDePantalla.indexOf("Duo-Cromo");
+                if (duoIndex !== -1) {
+                    if (indiceModoActual === duoIndex) {
+                        // Si ya está en Duo-Cromo, volver al anterior (o al primero)
+                        indiceModoActual = 0;
+                    } else {
+                        indiceModoActual = duoIndex;
+                    }
+                    randomizedLines = {};
+                    actualizarPantalla();
+                }
+                break;
+            case 'set_type':
+                // Cambiar a un tipo específico de optotipo
+                this.setOptotypeByType(data.value);
+                break;
+            case 'toggle_mask':
+                // Implementar máscara (futuro)
+                alert("Máscara no implementada aún");
+                break;
+        }
+    },
+
+    setOptotypeByType(type) {
+        // Buscar el primer modo que coincida con el tipo solicitado
+        let targetMode = null;
+
+        // Mapeo de tipos a nombres en settings
+        // settings.CARTILLAS_ETDRS keys: "Sloan", "Landolt", "E", "Allen", "Formas"
+        // settings.CARTILLAS_NUMEROS keys: "Numeros"
+
+        const map = {
+            'sloan': 'Sloan',
+            'numbers': 'Numeros',
+            'landolt': 'Landolt',
+            'e_chart': 'E',
+            'allen': 'Allen',
+            'forms': 'Formas'
+        };
+
+        const targetName = map[type];
+        if (!targetName) return;
+
+        const index = modosDePantalla.findIndex(m => m.includes(targetName));
+        if (index !== -1) {
+            indiceModoActual = index;
+            randomizedLines = {};
+            actualizarPantalla();
+        }
+    }
+};
+
+// Iniciar lógica del remoto
+RemoteControl.init();
