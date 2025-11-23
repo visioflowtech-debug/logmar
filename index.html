@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Visual Completo</title>
+
+    <link rel="stylesheet" href="style.css">
+    <script src="config.js?v=15"></script>
+    <script src="chart_logic.js"></script>
+    <script src="main.js" defer></script>
+</head>
+
+<body>
+
+    <div id="config-link">
+        <a href="configuracion.html" title="Ir a Configuración">&#9881;</a>
+    </div>
+
+    <div id="info">
+        <span id="info-logmar">LogMAR: --</span>
+        <span id="info-snellen">Snellen: --</span>
+    </div>
+
+    <!-- ETIQUETAS DE DEPURACIÓN TEMPORALES -->
+    <div id="debug-info">
+        <div>Distancia: <span id="debug-distancia">--</span> m</div>
+        <div>Ancho Pantalla: <span id="debug-ancho">--</span> cm</div>
+        <div>Resolución: <span id="debug-resolucion">--</span> px</div>
+    </div>
+
+    <div class="chart-container">
+
+        <div id="etdrs-chart">
+            <div id="etdrs-line-content">
+                <span id="l1"></span><span id="l2"></span><span id="l3"></span>
+                <span id="l4"></span><span id="l5"></span><span id="l6"></span>
+                <span id="l7"></span><span id="l8"></span>
+            </div>
+        </div>
+
+        <div id="duochrome-chart" class="hidden">
+            <div id="red-side"></div>
+            <div id="green-side"></div>
+        </div>
+
+        <div id="astigmatism-chart" class="hidden">
+            <div id="clock-center"></div>
+            <div class="line-group" style="transform: rotate(0deg);">
+                <div class="line"></div>
+                <div class="line"></div>
+                <div class="line"></div>
+            </div>
+            <div class="line-group" style="transform: rotate(15deg);">
+                <div class="line"></div>
+                <div class="line"></div>
+                <div class="line"></div>
+            </div>
+            <div class="line-group" style="transform: rotate(30deg);">
+                <div class="line"></div>
+                <div class="line"></div>
+                <div class="line"></div>
+            </div>
+            <div class="line-group" style="transform: rotate(45deg);">
+                <div class="line"></div>
+                <div class="line"></div>
+                <div class="line"></div>
+            </div>
+            <div class="line-group" style="transform: rotate(60deg);">
+                <div class="line"></div>
+                <div class="line"></div>
+                <div class="line"></div>
+            </div>
+            <div class="line-group" style="transform: rotate(75deg);">
+                <div class="line"></div>
+                <div class="line"></div>
+                <div class="line"></div>
+            </div>
+            <div class="line-group" style="transform: rotate(90deg);">
+                <div class="line"></div>
+                <div class="line"></div>
+                <div class="line"></div>
+            </div>
+            <div class="line-group" style="transform: rotate(105deg);">
+                <div class="line"></div>
+                <div class="line"></div>
+                <div class="line"></div>
+            </div>
+            <div class="line-group" style="transform: rotate(120deg);">
+                <div class="line"></div>
+                <div class="line"></div>
+                <div class="line"></div>
+            </div>
+            <div class="line-group" style="transform: rotate(135deg);">
+                <div class="line"></div>
+                <div class="line"></div>
+                <div class="line"></div>
+            </div>
+            <div class="line-group" style="transform: rotate(150deg);">
+                <div class="line"></div>
+                <div class="line"></div>
+                <div class="line"></div>
+            </div>
+            <div class="line-group" style="transform: rotate(165deg);">
+                <div class="line"></div>
+                <div class="line"></div>
+                <div class="line"></div>
+            </div>
+            <div id="clock-numbers">
+                <div class="number-container" style="transform: rotate(30deg);">
+                    <div class="number-text" style="transform: rotate(-30deg);">1</div>
+                </div>
+                <div class="number-container" style="transform: rotate(60deg);">
+                    <div class="number-text" style="transform: rotate(-60deg);">2</div>
+                </div>
+                <div class="number-container" style="transform: rotate(90deg);">
+                    <div class="number-text" style="transform: rotate(-90deg);">3</div>
+                </div>
+                <div class="number-container" style="transform: rotate(120deg);">
+                    <div class="number-text" style="transform: rotate(-120deg);">4</div>
+                </div>
+                <div class="number-container" style="transform: rotate(150deg);">
+                    <div class="number-text" style="transform: rotate(-150deg);">5</div>
+                </div>
+                <div class="number-container" style="transform: rotate(180deg);">
+                    <div class="number-text" style="transform: rotate(-180deg);">6</div>
+                </div>
+                <div class="number-container" style="transform: rotate(210deg);">
+                    <div class="number-text" style="transform: rotate(-210deg);">7</div>
+                </div>
+                <div class="number-container" style="transform: rotate(240deg);">
+                    <div class="number-text" style="transform: rotate(-240deg);">8</div>
+                </div>
+                <div class="number-container" style="transform: rotate(270deg);">
+                    <div class="number-text" style="transform: rotate(-270deg);">9</div>
+                </div>
+                <div class="number-container" style="transform: rotate(300deg);">
+                    <div class="number-text" style="transform: rotate(-300deg);">10</div>
+                </div>
+                <div class="number-container" style="transform: rotate(330deg);">
+                    <div class="number-text" style="transform: rotate(-330deg);">11</div>
+                </div>
+                <div class="number-container" style="transform: rotate(360deg);">
+                    <div class="number-text" style="transform: rotate(-360deg);">12</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="worth-test" class="hidden">
+            <div class="worth-dot red"></div>
+            <div class="worth-dot green left"></div>
+            <div class="worth-dot green right"></div>
+            <div class="worth-dot white"></div>
+        </div>
+
+        <div id="amsler-grid" class="hidden">
+            <div class="amsler-center-dot"></div>
+        </div>
+
+    </div>
+
+</body>
+
+</html>
