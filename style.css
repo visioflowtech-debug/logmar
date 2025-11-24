@@ -606,6 +606,34 @@ body.mirrored {
     text-decoration: underline;
 }
 
+/* --- Optotipo Blanco (Target) --- */
+.optotype-target {
+    width: 1em;
+    height: 1em;
+    border-radius: 50%;
+    background-color: transparent;
+    border: 0.15em solid black;
+    position: relative;
+    box-sizing: border-box;
+    display: inline-block;
+}
+
+.optotype-target::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 0.4em;
+    height: 0.4em;
+    border-radius: 50%;
+    background-color: transparent;
+    border: 0.15em solid black;
+    box-sizing: border-box;
+}
+
+}
+
 .test-hint {
     display: block;
     margin-top: 0.5rem;

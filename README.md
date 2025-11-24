@@ -47,7 +47,20 @@ Una aplicación web completa para pruebas de agudeza visual, diseñada para prof
 *   `remote.html` / `remote.js`: Interfaz y lógica del control remoto.
 *   `style.css`: Estilos generales.
 
+
+## Generar Versión Protegida (Build)
+
+Para generar una versión ofuscada y lista para distribución:
+
+1.  Asegúrate de tener **Node.js** instalado.
+2.  Ejecuta el script de construcción:
+    ```bash
+    node build_obfuscate.js
+    ```
+3.  Esto creará una carpeta `dist/`.
+4.  **Distribuye únicamente el contenido de la carpeta `dist/`** a tus clientes.
+
 ## Licencia
 
-Este software requiere una clave de licencia para su uso completo.
-Clave de prueba: `IT-WORKS-PERFECTLY`
+Este software requiere una clave de licencia válida para su uso.
+
