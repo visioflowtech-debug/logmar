@@ -18,7 +18,7 @@ function initPeer() {
     });
 
     peer.on('open', (id) => {
-        console.log('My peer ID is: ' + id);
+
     });
 
     peer.on('error', (err) => {
@@ -50,7 +50,7 @@ function connectToHost(hostId) {
     conn = peer.connect(fullHostId);
 
     conn.on('open', () => {
-        console.log("Connected to: " + fullHostId);
+
         statusText.textContent = "¡Conectado!";
 
         // Switch UI

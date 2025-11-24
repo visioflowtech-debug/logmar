@@ -196,18 +196,20 @@
 
             <!-- Optotypes -->
             <div class="section-title">Optotipos</div>
-            <div class="btn" onclick="sendCommand('set_type', 'sloan')">ABC</div>
-            <div class="btn" onclick="sendCommand('set_type', 'numbers')">123</div>
-            <div class="btn" onclick="sendCommand('set_type', 'landolt')">C</div>
-            <div class="btn" onclick="sendCommand('set_type', 'e_chart')">E</div>
-            <div class="btn" onclick="sendCommand('set_type', 'allen')">🧸</div>
-            <div class="btn" onclick="sendCommand('set_type', 'forms')">⭕</div>
+            <div class="btn" style="grid-column: span 1.5;" onclick="sendCommand('set_type', 'sloan')">Letras</div>
+            <div class="btn" style="grid-column: span 1.5;" onclick="sendCommand('set_type', 'numbers')">Números</div>
+
+            <!-- Tests -->
+            <div class="section-title">Tests Especiales</div>
+            <div class="btn btn-red" onclick="sendCommand('toggle_red_green')">R/G</div>
+            <div class="btn" onclick="sendCommand('set_mode', 'Reloj Astigmático')">Reloj</div>
+            <div class="btn" onclick="sendCommand('set_mode', 'Test de Worth')">Worth</div>
+            <div class="btn" onclick="sendCommand('set_mode', 'Rejilla de Amsler')">Amsler</div>
 
             <!-- Tools -->
             <div class="section-title">Herramientas</div>
-            <div class="btn btn-red" onclick="sendCommand('toggle_red_green')">R/G</div>
-            <div class="btn btn-mirror" onclick="sendCommand('toggle_mirror')">Espejo</div>
-            <div class="btn" onclick="sendCommand('toggle_mask')">Masc.</div>
+            <div class="btn btn-mirror" style="grid-column: span 3;" onclick="sendCommand('toggle_mirror')">Modo Espejo
+            </div>
         </div>
     </div>
 

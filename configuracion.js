@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         loadLogMarCheckboxes(); // Cargar checkboxes
         updateReferenceTable(); // Actualizar tabla al cargar
-        console.log('Configuración cargada en el formulario.');
+
     }
 
     // --- Función Auxiliar: Cargar Checkboxes ---

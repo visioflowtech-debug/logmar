@@ -105,14 +105,10 @@ const etdrsDisplayRules = {
 
 // --- 2. FUNCIÓN PRINCIPAL DE ACTUALIZACIÓN ---
 function actualizarPantalla() {
-    console.log("actualizarPantalla() ejecutándose...");
     const modoActual = modosDePantalla[indiceModoActual];
-    console.log("Modo Actual:", modoActual);
-    console.log("Valor LogMAR:", valorLogMarActual);
 
     const esModoETDRS = settings.CARTILLAS_ETDRS[modoActual] ||
         settings.CARTILLAS_NUMEROS[modoActual];
-    console.log("Es Modo ETDRS/Numeros:", !!esModoETDRS);
 
     const esPruebaLogMAR = esModoETDRS || modoActual === "Duo-Cromo";
 
@@ -123,10 +119,8 @@ function actualizarPantalla() {
     etdrsChart.classList.add('hidden');
 
     if (esModoETDRS) {
-        console.log("Renderizando ETDRS...");
         // La lógica de renderizado está más abajo
     } else if (modeElements[modoActual]) {
-        console.log("Mostrando elemento de modo:", modoActual);
         modeElements[modoActual].classList.remove('hidden');
         if (modoActual === "Duo-Cromo") {
             renderDuochrome();
@@ -136,7 +130,6 @@ function actualizarPantalla() {
     if (esModoETDRS) {
         etdrsChart.classList.remove('hidden');
         const nuevoTamanoPx = calcularTamanoLogMAR(valorLogMarActual, settings);
-        console.log("Nuevo Tamaño Px:", nuevoTamanoPx);
         etdrsChart.style.fontSize = `${nuevoTamanoPx}px`;
         etdrsChart.style.letterSpacing = "normal";
 
@@ -150,7 +143,6 @@ function actualizarPantalla() {
 
         let indiceDeLinea = Math.round(10 - (valorLogMarActual * 10));
         indiceDeLinea = Math.max(0, Math.min(cartillaActual.length - 1, indiceDeLinea));
-        console.log("Índice de línea:", indiceDeLinea);
 
         // Lógica de aleatorización
         let lineContent = "";
@@ -159,7 +151,6 @@ function actualizarPantalla() {
         } else {
             lineContent = cartillaActual[indiceDeLinea];
         }
-        console.log("Contenido de línea:", lineContent);
 
         const items = lineContent.split(' ');
 
@@ -167,7 +158,6 @@ function actualizarPantalla() {
 
         const rule = etdrsDisplayRules[valorLogMarActual.toFixed(1)] || (valorLogMarActual < 0.1 ? [8, 0] : [5, 0]);
         const [count, start] = rule;
-        console.log("Regla de visualización:", rule);
 
         for (let i = 0; i < count; i++) {
             const itemIndex = start + i;
@@ -349,7 +339,6 @@ const RemoteControl = {
     hostId: null,
 
     init() {
-        console.log("RemoteControl.init() called");
         // Ensure DOM is ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.setup());
@@ -359,7 +348,6 @@ const RemoteControl = {
     },
 
     setup() {
-        console.log("RemoteControl.setup() called");
         // Generar ID corto aleatorio (4 caracteres)
         this.hostId = this.generateShortId();
 
@@ -376,11 +364,8 @@ const RemoteControl = {
             return;
         }
 
-        console.log("Remote Control UI elements found. Attaching listener...");
-
         // Event Listeners UI
         remoteLink.addEventListener('click', () => {
-            console.log("Remote icon clicked!");
             this.startHost();
 
             // Mostrar modal (quitando clase hidden y forzando display)
@@ -428,15 +413,12 @@ const RemoteControl = {
         });
 
         this.peer.on('open', (id) => {
-            console.log('Remote Host Ready. ID:', this.hostId);
         });
 
         this.peer.on('connection', (conn) => {
-            console.log('Remote connected!');
             this.conn = conn;
 
             conn.on('data', (data) => {
-                console.log('Received:', data);
                 this.handleCommand(data);
             });
         });
@@ -466,7 +448,13 @@ const RemoteControl = {
                 actualizarPantalla();
                 break;
             case 'reset_size':
-                valorLogMarActual = settings.valorLogMarInicial;
+                // Resetear a Letras (Cartilla 1) en 20/200 (LogMAR 1.0)
+                const lettersIndex = modosDePantalla.findIndex(m => m.includes("Cartilla 1"));
+                if (lettersIndex !== -1) {
+                    indiceModoActual = lettersIndex;
+                }
+                valorLogMarActual = 1.0;
+                randomizedLines = {};
                 actualizarPantalla();
                 break;
             case 'next_optotype':
@@ -498,6 +486,8 @@ const RemoteControl = {
                         indiceModoActual = 0;
                     } else {
                         indiceModoActual = duoIndex;
+                        // Resetear tamaño al entrar en Duo-Cromo
+                        valorLogMarActual = settings.duochromeInitialLogMar;
                     }
                     randomizedLines = {};
                     actualizarPantalla();
@@ -507,10 +497,26 @@ const RemoteControl = {
                 // Cambiar a un tipo específico de optotipo
                 this.setOptotypeByType(data.value);
                 break;
+            case 'set_mode':
+                // Cambiar directamente a un modo específico (ej. Reloj, Worth, Amsler)
+                this.setMode(data.value);
+                break;
             case 'toggle_mask':
                 // Implementar máscara (futuro)
                 alert("Máscara no implementada aún");
                 break;
+        }
+    },
+
+    setMode(modeName) {
+        // Verificar si el modo existe en la lista de modos disponibles
+        const index = modosDePantalla.indexOf(modeName);
+        if (index !== -1) {
+            indiceModoActual = index;
+            randomizedLines = {};
+            actualizarPantalla();
+        } else {
+            // console.warn removed
         }
     },
 
@@ -519,12 +525,12 @@ const RemoteControl = {
         let targetMode = null;
 
         // Mapeo de tipos a nombres en settings
-        // settings.CARTILLAS_ETDRS keys: "Sloan", "Landolt", "E", "Allen", "Formas"
-        // settings.CARTILLAS_NUMEROS keys: "Numeros"
+        // settings.CARTILLAS_ETDRS keys: "Cartilla 1", "Cartilla 2"
+        // settings.CARTILLAS_NUMEROS keys: "Numeros 1"
 
         const map = {
-            'sloan': 'Sloan',
-            'numbers': 'Numeros',
+            'sloan': 'Cartilla 1', // Mapear 'sloan' a la primera cartilla de letras
+            'numbers': 'Numeros 1', // Mapear 'numbers' a la primera cartilla de números
             'landolt': 'Landolt',
             'e_chart': 'E',
             'allen': 'Allen',
