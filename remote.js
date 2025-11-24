@@ -38,6 +38,14 @@ connectBtn.addEventListener('click', () => {
     connectToHost(hostId);
 });
 
+const reconnectBtn = document.getElementById('reconnect-btn');
+if (reconnectBtn) {
+    reconnectBtn.addEventListener('click', () => {
+        // Simple reload to reset state and reconnect flow
+        window.location.reload();
+    });
+}
+
 function connectToHost(hostId) {
     // The actual PeerJS ID is prefixed to avoid collisions globally
     // We use a prefix like "logmar-app-" + hostId

@@ -90,6 +90,30 @@
             border-radius: 8px;
         }
 
+        .logo {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .reconnect-btn {
+            background: transparent;
+            border: 1px solid #333;
+            color: #888;
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+        }
+
+        .reconnect-btn:active {
+            background: #333;
+            transform: scale(0.95);
+        }
+
         .status-indicator {
             width: 10px;
             height: 10px;
@@ -176,38 +200,46 @@
 
     <div id="remote-interface">
         <div class="header">
-            <span>Conectado a: <strong id="connected-host">...</strong></span>
+            <div class="logo">LogMAR Remote</div>
+            <button id="reconnect-btn" class="reconnect-btn" title="Reconectar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 4v6h-6"></path>
+                    <path d="M1 20v-6h6"></path>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+            </button>
             <div id="status-dot" class="status-indicator"></div>
         </div>
 
         <div class="controls-grid">
             <!-- Navigation -->
-            <div class="section-title">Navegación</div>
+
             <div class="btn" onclick="sendCommand('prev_optotype')">◀</div>
             <div class="btn" onclick="sendCommand('randomize')">🎲</div>
             <div class="btn" onclick="sendCommand('next_optotype')">▶</div>
 
             <!-- Size -->
-            <div class="section-title">Tamaño</div>
+
             <div class="btn" onclick="sendCommand('decrease_size')">➖</div>
             <div class="btn btn-large" style="grid-column: span 1; font-size: 14px;"
                 onclick="sendCommand('reset_size')">RESET</div>
             <div class="btn" onclick="sendCommand('increase_size')">➕</div>
 
             <!-- Optotypes -->
-            <div class="section-title">Optotipos</div>
+
             <div class="btn" style="grid-column: span 1.5;" onclick="sendCommand('set_type', 'sloan')">Letras</div>
             <div class="btn" style="grid-column: span 1.5;" onclick="sendCommand('set_type', 'numbers')">Números</div>
 
             <!-- Tests -->
-            <div class="section-title">Tests Especiales</div>
+
             <div class="btn btn-red" onclick="sendCommand('toggle_red_green')">R/G</div>
             <div class="btn" onclick="sendCommand('set_mode', 'Reloj Astigmático')">Reloj</div>
             <div class="btn" onclick="sendCommand('set_mode', 'Test de Worth')">Worth</div>
             <div class="btn" onclick="sendCommand('set_mode', 'Rejilla de Amsler')">Amsler</div>
 
             <!-- Tools -->
-            <div class="section-title">Herramientas</div>
+
             <div class="btn btn-mirror" style="grid-column: span 3;" onclick="sendCommand('toggle_mirror')">Modo Espejo
             </div>
         </div>

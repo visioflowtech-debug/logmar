@@ -3,7 +3,7 @@
 const LicenseManager = {
     // URL de tu Google Apps Script (Reemplazar después de desplegar)
     API_URL: 'https://script.google.com/macros/s/AKfycbwzm6qi5TbR9j5FE8xxkiQxoqIYLsJhViRDDop1f2rqAUgSs107qZ800HXmTtIuRCVh/exec',
-    TEST_KEY: 'IT-WORKS-PERFECTLY', // Clave para pruebas
+    TEST_KEY: '', // Clave para pruebas (Desactivada)
 
     init() {
         if (this.isActivated()) {
@@ -66,12 +66,15 @@ const LicenseManager = {
         this.showMessage('Verificando...', 'info');
 
         // 1. Verificar clave de prueba
+        // 1. Verificar clave de prueba (Desactivado)
+        /*
         if (key === this.TEST_KEY) {
             setTimeout(() => {
                 this.activateSuccess();
             }, 1000);
             return;
         }
+        */
 
         // 2. Verificar con Google Sheets
         try {

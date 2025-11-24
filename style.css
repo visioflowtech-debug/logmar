@@ -67,8 +67,9 @@ body.dark-background {
 }
 
 #red-side {
-    flex: 1;
-    /* Ocupa el 50% exacto */
+    flex: 0 0 50%;
+    width: 50%;
+    max-width: 50%;
     background-color: rgb(255, 0, 0);
     display: flex;
     flex-direction: column;
@@ -76,11 +77,13 @@ body.dark-background {
     align-items: center;
     gap: 0.2em;
     height: 100%;
+    overflow: hidden;
 }
 
 #green-side {
-    flex: 1;
-    /* Ocupa el 50% exacto */
+    flex: 0 0 50%;
+    width: 50%;
+    max-width: 50%;
     background-color: rgb(0, 150, 0);
     display: flex;
     flex-direction: column;
@@ -88,6 +91,7 @@ body.dark-background {
     align-items: center;
     gap: 0.2em;
     height: 100%;
+    overflow: hidden;
 }
 
 #red-side span,
@@ -262,8 +266,9 @@ body.dark-background {
 }
 
 #red-side {
-    flex: 1;
-    /* Ocupa el 50% exacto */
+    flex: 0 0 50%;
+    width: 50%;
+    max-width: 50%;
     background-color: rgb(255, 0, 0);
     display: flex;
     flex-direction: column;
@@ -271,11 +276,13 @@ body.dark-background {
     align-items: center;
     gap: 0.2em;
     height: 100%;
+    overflow: hidden;
 }
 
 #green-side {
-    flex: 1;
-    /* Ocupa el 50% exacto */
+    flex: 0 0 50%;
+    width: 50%;
+    max-width: 50%;
     background-color: rgb(0, 150, 0);
     display: flex;
     flex-direction: column;
@@ -283,6 +290,7 @@ body.dark-background {
     align-items: center;
     gap: 0.2em;
     height: 100%;
+    overflow: hidden;
 }
 
 #red-side span,

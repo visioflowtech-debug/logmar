@@ -177,15 +177,63 @@ function actualizarPantalla() {
 }
 
 function renderDuochrome() {
-    const nuevoTamanoPx = calcularTamanoLogMAR(valorLogMarActual, settings);
-    duochromeChart.style.fontSize = `${nuevoTamanoPx}px`;
+    // Limpiar contenido previo
+    duochromeRed.innerHTML = '';
+    duochromeGreen.innerHTML = '';
 
-    if (duochromeRed.children.length === 0) {
-        const duoLettersArray = settings.DUOCHROME_LETTERS.split(' ');
-        const spans = `<span>${duoLettersArray[0]}</span><span>${duoLettersArray[1]}</span>`;
-        duochromeRed.innerHTML = spans;
-        duochromeGreen.innerHTML = spans;
+    // Rango de LogMAR: 0.6 bajando hasta 0.0
+    const startLogMar = 0.6;
+    const endLogMar = 0.0;
+    const step = 0.1;
+
+    // Usamos un fragmento para optimizar el DOM
+    const redFragment = document.createDocumentFragment();
+    const greenFragment = document.createDocumentFragment();
+
+    for (let val = startLogMar; val >= endLogMar - 0.01; val -= step) {
+        // Calcular tamaño para este valor LogMAR
+        const fontSizePx = calcularTamanoLogMAR(val, settings);
+
+        // Generar línea aleatoria (3 letras para que quepan bien)
+        const lineText = generateRandomLine(3, 'LETTERS');
+        const letters = lineText.split(' ');
+
+        // Crear contenedor de línea
+        const lineContainerRed = document.createElement('div');
+        lineContainerRed.style.fontSize = `${fontSizePx}px`;
+        lineContainerRed.style.lineHeight = '1.2';
+        lineContainerRed.style.display = 'flex';
+        lineContainerRed.style.gap = '0.5em';
+        lineContainerRed.style.justifyContent = 'center'; // Centrar letras
+
+        const lineContainerGreen = document.createElement('div');
+        lineContainerGreen.style.fontSize = `${fontSizePx}px`;
+        lineContainerGreen.style.lineHeight = '1.2';
+        lineContainerGreen.style.display = 'flex';
+        lineContainerGreen.style.gap = '0.5em';
+        lineContainerGreen.style.justifyContent = 'center'; // Centrar letras
+
+        // Lado Rojo: Orden normal
+        letters.forEach(char => {
+            const span = document.createElement('span');
+            span.textContent = char;
+            lineContainerRed.appendChild(span);
+        });
+
+        // Lado Verde: Orden inverso (Espejo del rojo)
+        const reversedLetters = [...letters].reverse();
+        reversedLetters.forEach(char => {
+            const span = document.createElement('span');
+            span.textContent = char;
+            lineContainerGreen.appendChild(span);
+        });
+
+        redFragment.appendChild(lineContainerRed);
+        greenFragment.appendChild(lineContainerGreen);
     }
+
+    duochromeRed.appendChild(redFragment);
+    duochromeGreen.appendChild(greenFragment);
 }
 
 function updateHud(modoActual) {
@@ -304,9 +352,11 @@ window.addEventListener('keydown', function (event) {
 
     switch (event.key) {
         case KEY.UP:
+            if (modosDePantalla[indiceModoActual] === "Duo-Cromo") return;
             changeLogMarStep(1);
             break;
         case KEY.DOWN:
+            if (modosDePantalla[indiceModoActual] === "Duo-Cromo") return;
             changeLogMarStep(-1);
             break;
         case KEY.RIGHT:
@@ -322,8 +372,12 @@ window.addEventListener('keydown', function (event) {
     }
 
     const newMode = modosDePantalla[indiceModoActual];
+    // En Duo-Cromo ya no usamos valorLogMarActual para el tamaño global, 
+    // pero podemos resetearlo por consistencia si salimos de él.
     if (newMode === "Duo-Cromo" && oldMode !== "Duo-Cromo") {
-        valorLogMarActual = settings.duochromeInitialLogMar;
+        // No es estrictamente necesario setear valorLogMarActual porque renderDuochrome usa un rango fijo,
+        // pero ayuda a mantener el estado consistente.
+        valorLogMarActual = 0.6;
     }
 
     actualizarPantalla();
@@ -418,6 +472,13 @@ const RemoteControl = {
         this.peer.on('connection', (conn) => {
             this.conn = conn;
 
+            // Auto-close modal on connection
+            const remoteModal = document.getElementById('remote-modal');
+            if (remoteModal) {
+                remoteModal.classList.add('hidden');
+                remoteModal.style.display = 'none';
+            }
+
             conn.on('data', (data) => {
                 this.handleCommand(data);
             });
@@ -437,6 +498,13 @@ const RemoteControl = {
     handleCommand(data) {
         // Verificar licencia
         if (typeof LicenseManager !== 'undefined' && !LicenseManager.isActivated()) return;
+
+        // Bloquear cambios de tamaño en Duo-Cromo
+        if (modosDePantalla[indiceModoActual] === "Duo-Cromo") {
+            if (['increase_size', 'decrease_size', 'reset_size'].includes(data.action)) {
+                return;
+            }
+        }
 
         switch (data.action) {
             case 'increase_size':
@@ -487,7 +555,7 @@ const RemoteControl = {
                     } else {
                         indiceModoActual = duoIndex;
                         // Resetear tamaño al entrar en Duo-Cromo
-                        valorLogMarActual = settings.duochromeInitialLogMar;
+                        valorLogMarActual = (typeof settings.duochromeInitialLogMar !== 'undefined') ? settings.duochromeInitialLogMar : 0.6;
                     }
                     randomizedLines = {};
                     actualizarPantalla();
@@ -510,13 +578,17 @@ const RemoteControl = {
 
     setMode(modeName) {
         // Verificar si el modo existe en la lista de modos disponibles
-        const index = modosDePantalla.indexOf(modeName);
+        let index = modosDePantalla.indexOf(modeName);
+
+        if (index === -1) {
+            // Intento de búsqueda flexible (por si acaso hay problemas de encoding)
+            index = modosDePantalla.findIndex(m => m.includes(modeName) || modeName.includes(m));
+        }
+
         if (index !== -1) {
             indiceModoActual = index;
             randomizedLines = {};
             actualizarPantalla();
-        } else {
-            // console.warn removed
         }
     },
 
