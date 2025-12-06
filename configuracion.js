@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const distanciaMetros = document.getElementById('distanciaMetros');
     const valorLogMarInicial = document.getElementById('valorLogMarInicial');
     const duochromeInitialLogMar = document.getElementById('duochromeInitialLogMar');
+    const duochromeTargetScale = document.getElementById('duochromeTargetScale');
+    const duochromeLetterLines = document.getElementById('duochromeLetterLines');
     const calibrationFactor = document.getElementById('calibrationFactor');
     const referenceList = document.getElementById('reference-list');
     const logmarCheckboxesContainer = document.getElementById('logmar-checkboxes');
@@ -27,11 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
         distanciaMetros.value = localStorage.getItem('distanciaMetros') || CONFIG.distanciaMetros;
         valorLogMarInicial.value = localStorage.getItem('valorLogMarInicial') || CONFIG.valorLogMarInicial;
         duochromeInitialLogMar.value = localStorage.getItem('duochromeInitialLogMar') || CONFIG.duochromeInitialLogMar;
+        duochromeTargetScale.value = localStorage.getItem('duochromeTargetScale') || (CONFIG.duochromeTargetScale || 1.0);
+        duochromeLetterLines.value = localStorage.getItem('duochromeLetterLines') || (CONFIG.duochromeLetterLines || 2);
         calibrationFactor.value = localStorage.getItem('calibrationFactor') || CONFIG.calibrationFactor;
 
         loadLogMarCheckboxes(); // Cargar checkboxes
         updateReferenceTable(); // Actualizar tabla al cargar
-        console.log('Configuración cargada en el formulario.');
+
     }
 
     // --- Función Auxiliar: Cargar Checkboxes ---
@@ -114,6 +118,8 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('distanciaMetros', distanciaMetros.value);
             localStorage.setItem('valorLogMarInicial', valorLogMarInicial.value);
             localStorage.setItem('duochromeInitialLogMar', duochromeInitialLogMar.value);
+            localStorage.setItem('duochromeTargetScale', duochromeTargetScale.value);
+            localStorage.setItem('duochromeLetterLines', duochromeLetterLines.value);
             localStorage.setItem('calibrationFactor', calibrationFactor.value);
 
             // Guardar lista de líneas habilitadas
