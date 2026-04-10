@@ -325,39 +325,36 @@ function updateHud(modoActual) {
 
 function renderSymbol(char, isLEA = false, isLighthouse = false) {
     if (isLEA) {
-        // Estilo CONTORNO (Hollow) para LEA
+        // Estilo CIENTÍFICO (Silueta Sólida Calibrada) para LEA
         const leaMap = {
             'A': `<svg class="optotype-svg" viewBox="0 0 100 100">
-                    <path fill="none" stroke="currentColor" stroke-width="10" d="M50,32 C65,12 90,18 90,52 C90,82 70,92 50,92 C30,92 10,82 10,52 C10,18 35,12 50,32 Z" />
+                    <path fill="currentColor" d="M50,30 C65,10 90,20 90,52 C90,80 70,92 50,92 C30,92 10,80 10,52 C10,20 35,10 50,30 Z" />
                   </svg>`,
             'H': `<svg class="optotype-svg" viewBox="0 0 100 100">
-                    <path fill="none" stroke="currentColor" stroke-width="10" d="M15,90 V45 L50,12 L85,45 V90 Z" />
+                    <path fill="currentColor" d="M15,90 V45 L50,12 L85,45 V90 Z" />
                   </svg>`,
             'C': `<svg class="optotype-svg" viewBox="0 0 100 100">
-                    <circle fill="none" stroke="currentColor" stroke-width="10" cx="50" cy="50" r="40" />
+                    <circle fill="currentColor" cx="50" cy="50" r="42" />
                   </svg>`,
             'S': `<svg class="optotype-svg" viewBox="0 0 100 100">
-                    <rect fill="none" stroke="currentColor" stroke-width="10" x="10" y="10" width="80" height="80" />
+                    <rect fill="currentColor" x="10" y="10" width="80" height="80" />
                   </svg>`
         };
         return leaMap[char] || char;
     }
 
     if (isLighthouse) {
-        // Estilo LIGHTHOUSE (Apple, House with window, Umbrella)
+        // Estilo LIGHTHOUSE (Allen Figures - Siluetas Sólidas)
         const lightMap = {
             'A': `<svg class="optotype-svg" viewBox="0 0 100 100">
-                    <!-- Manzana Lighthouse -->
                     <path fill="currentColor" d="M50,30 C65,10 90,20 90,50 C90,75 70,90 50,90 C30,90 10,75 10,50 C10,20 35,10 50,30 Z" />
                   </svg>`,
             'H': `<svg class="optotype-svg" viewBox="0 0 100 100">
-                    <!-- Casa con Ventana -->
                     <path fill="currentColor" d="M15,90 V45 L50,12 L85,45 V90 Z M55,75 V55 H45 V75 Z" fill-rule="evenodd" />
                   </svg>`,
             'U': `<svg class="optotype-svg" viewBox="4 4 92 92">
-                    <!-- Sombrilla -->
                     <path fill="currentColor" d="M50,15 C30,15 15,35 15,55 L85,55 C85,35 70,15 50,15 Z" />
-                    <path fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" d="M50,55 V80 C50,85 40,85 40,80" />
+                    <rect fill="currentColor" x="47" y="55" width="6" height="25" rx="3" />
                   </svg>`
         };
         return lightMap[char] || char;
