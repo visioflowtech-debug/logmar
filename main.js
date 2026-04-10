@@ -321,12 +321,12 @@ function updateHud(modoActual) {
 function renderSymbol(char) {
     const symbolMap = {
         'A': `<svg class="optotype-svg" viewBox="0 0 100 100">
-                <!-- Manzana (Corazón LEA) -->
-                <path d="M50,90 C30,90 10,70 10,45 C10,25 30,15 50,30 C70,15 90,25 90,45 C90,70 70,90 50,90 Z" />
+                <!-- Manzana (Diseño LEA Refinado) -->
+                <path d="M50,32 C65,12 90,18 90,52 C90,82 70,92 50,92 C30,92 10,82 10,52 C10,18 35,12 50,32 Z" />
               </svg>`,
         'H': `<svg class="optotype-svg" viewBox="0 0 100 100">
-                <!-- Casa (Pentágono) -->
-                <path d="M50,10 L90,45 L90,90 L10,90 L10,45 Z" />
+                <!-- Casa (Diseño LEA Refinado) -->
+                <path d="M15,90 L15,45 L50,12 L85,45 L85,90 Z" />
               </svg>`,
         'C': `<svg class="optotype-svg" viewBox="0 0 100 100">
                 <!-- Círculo -->
