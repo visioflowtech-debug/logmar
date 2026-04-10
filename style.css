@@ -632,13 +632,12 @@ body.mirrored {
     box-sizing: border-box;
 }
 
-}
-
 .test-hint {
     display: block;
     margin-top: 0.5rem;
     color: #555;
     font-family: monospace;
+}
 /* --- Símbolos LEA (Pediátricos) --- */
 .optotype-svg {
     width: 1em;
