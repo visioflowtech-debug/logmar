@@ -68,5 +68,22 @@ const CONFIG = {
             "A C S H C H S A",
             "H S A C S A H C"
         ]
+    },
+
+    // --- 6. CARTILLA LIGHTHOUSE ---
+    // Mapeo: A=Apple, H=House (con ventana), U=Umbrella (Sombrilla)
+    CARTILLAS_LIGHTHOUSE: {
+        "Lighthouse 1": [
+            "A H U A H U A H",
+            "U A H U A H U A",
+            "H U A H U A H U",
+            "A U H A U H A U",
+            "H A U H A U H A",
+            "U H A U H A U H",
+            "A H U H A U A H",
+            "U A H A U H U A",
+            "H U A U H A H U",
+            "A U H H U A A U"
+        ]
     }
 };

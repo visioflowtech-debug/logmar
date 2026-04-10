@@ -37,6 +37,7 @@ const settings = {
 
     // --- Cartillas Adicionales ---
     CARTILLAS_LEA: (typeof CONFIG !== 'undefined' ? CONFIG.CARTILLAS_LEA : {}),
+    CARTILLAS_LIGHTHOUSE: (typeof CONFIG !== 'undefined' ? CONFIG.CARTILLAS_LIGHTHOUSE : {}),
 
     // --- Configuración de Espejo ---
     isMirrored: safeJsonParse('isMirrored', false)
@@ -58,6 +59,7 @@ const modosDePantalla = [
     ...Object.keys(settings.CARTILLAS_ETDRS),
     ...Object.keys(settings.CARTILLAS_NUMEROS),
     ...Object.keys(settings.CARTILLAS_LEA),
+    ...Object.keys(settings.CARTILLAS_LIGHTHOUSE),
     "Duo-Cromo",
     "Reloj Astigmático",
     "Test de Worth",
@@ -117,7 +119,8 @@ function actualizarPantalla() {
 
     const esModoETDRS = settings.CARTILLAS_ETDRS[modoActual] ||
         settings.CARTILLAS_NUMEROS[modoActual] ||
-        settings.CARTILLAS_LEA[modoActual];
+        settings.CARTILLAS_LEA[modoActual] ||
+        settings.CARTILLAS_LIGHTHOUSE[modoActual];
 
     const esPruebaLogMAR = esModoETDRS || modoActual === "Duo-Cromo";
 
@@ -144,12 +147,14 @@ function actualizarPantalla() {
 
         const cartillaActual = settings.CARTILLAS_ETDRS[modoActual] ||
             settings.CARTILLAS_NUMEROS[modoActual] ||
-            settings.CARTILLAS_LEA[modoActual];
+            settings.CARTILLAS_LEA[modoActual] ||
+            settings.CARTILLAS_LIGHTHOUSE[modoActual];
 
         const esModoLEA = !!settings.CARTILLAS_LEA[modoActual];
+        const esModoLighthouse = !!settings.CARTILLAS_LIGHTHOUSE[modoActual];
         const etdrsLineContent = document.getElementById('etdrs-line-content');
         if (etdrsLineContent) {
-            etdrsLineContent.classList.toggle('lea-mode', esModoLEA);
+            etdrsLineContent.classList.toggle('lea-mode', esModoLEA || esModoLighthouse);
         }
 
 
@@ -183,8 +188,8 @@ function actualizarPantalla() {
                 const char = items[itemIndex];
                 const el = etdrsLetrasElements[elementIndex];
 
-                if (esModoLEA) {
-                    el.innerHTML = renderSymbol(char);
+                if (esModoLEA || esModoLighthouse) {
+                    el.innerHTML = renderSymbol(char, esModoLEA, esModoLighthouse);
                 } else {
                     el.textContent = char; // Renderizar texto normal
                 }
@@ -318,26 +323,47 @@ function updateHud(modoActual) {
     debugResolucion.textContent = settings.resolucionAnchoPx;
 }
 
-function renderSymbol(char) {
-    const symbolMap = {
-        'A': `<svg class="optotype-svg" viewBox="0 0 100 100">
-                <!-- Manzana (Diseño LEA Refinado) -->
-                <path d="M50,32 C65,12 90,18 90,52 C90,82 70,92 50,92 C30,92 10,82 10,52 C10,18 35,12 50,32 Z" />
-              </svg>`,
-        'H': `<svg class="optotype-svg" viewBox="0 0 100 100">
-                <!-- Casa (Diseño LEA Refinado) -->
-                <path d="M15,90 L15,45 L50,12 L85,45 L85,90 Z" />
-              </svg>`,
-        'C': `<svg class="optotype-svg" viewBox="0 0 100 100">
-                <!-- Círculo -->
-                <circle cx="50" cy="50" r="40" />
-              </svg>`,
-        'S': `<svg class="optotype-svg" viewBox="0 0 100 100">
-                <!-- Cuadrado -->
-                <rect x="10" y="10" width="80" height="80" />
-              </svg>`
-    };
-    return symbolMap[char] || char;
+function renderSymbol(char, isLEA = false, isLighthouse = false) {
+    if (isLEA) {
+        // Estilo CONTORNO (Hollow) para LEA
+        const leaMap = {
+            'A': `<svg class="optotype-svg" viewBox="0 0 100 100">
+                    <path fill="none" stroke="currentColor" stroke-width="10" d="M50,32 C65,12 90,18 90,52 C90,82 70,92 50,92 C30,92 10,82 10,52 C10,18 35,12 50,32 Z" />
+                  </svg>`,
+            'H': `<svg class="optotype-svg" viewBox="0 0 100 100">
+                    <path fill="none" stroke="currentColor" stroke-width="10" d="M15,90 V45 L50,12 L85,45 V90 Z" />
+                  </svg>`,
+            'C': `<svg class="optotype-svg" viewBox="0 0 100 100">
+                    <circle fill="none" stroke="currentColor" stroke-width="10" cx="50" cy="50" r="40" />
+                  </svg>`,
+            'S': `<svg class="optotype-svg" viewBox="0 0 100 100">
+                    <rect fill="none" stroke="currentColor" stroke-width="10" x="10" y="10" width="80" height="80" />
+                  </svg>`
+        };
+        return leaMap[char] || char;
+    }
+
+    if (isLighthouse) {
+        // Estilo LIGHTHOUSE (Apple, House with window, Umbrella)
+        const lightMap = {
+            'A': `<svg class="optotype-svg" viewBox="0 0 100 100">
+                    <!-- Manzana Lighthouse -->
+                    <path fill="currentColor" d="M50,30 C65,10 90,20 90,50 C90,75 70,90 50,90 C30,90 10,75 10,50 C10,20 35,10 50,30 Z" />
+                  </svg>`,
+            'H': `<svg class="optotype-svg" viewBox="0 0 100 100">
+                    <!-- Casa con Ventana -->
+                    <path fill="currentColor" d="M15,90 V45 L50,12 L85,45 V90 Z M55,75 V55 H45 V75 Z" fill-rule="evenodd" />
+                  </svg>`,
+            'U': `<svg class="optotype-svg" viewBox="4 4 92 92">
+                    <!-- Sombrilla -->
+                    <path fill="currentColor" d="M50,15 C30,15 15,35 15,55 L85,55 C85,35 70,15 50,15 Z" />
+                    <path fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" d="M50,55 V80 C50,85 40,85 40,80" />
+                  </svg>`
+        };
+        return lightMap[char] || char;
+    }
+
+    return char;
 }
 
 // --- HELPERS ---
@@ -698,6 +724,7 @@ const RemoteControl = {
             'sloan': 'Cartilla 1', // Mapear 'sloan' a la primera cartilla de letras
             'numbers': 'Numeros 1', // Mapear 'numbers' a la primera cartilla de números
             'lea': 'LEA',           // Mapear 'lea' a la cartilla pediátrica
+            'lighthouse': 'Lighthouse',
             'landolt': 'Landolt',
             'e_chart': 'E',
             'allen': 'Allen',
