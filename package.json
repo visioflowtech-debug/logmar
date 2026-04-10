@@ -5,7 +5,7 @@
     "scripts": {
         "build": "node build_obfuscate.js"
     },
-    "devDependencies": {
+    "dependencies": {
         "javascript-obfuscator": "^4.1.0"
     },
     "engines": {

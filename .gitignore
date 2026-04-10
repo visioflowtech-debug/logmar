@@ -1,0 +1,9 @@
+# Dependencias
+node_modules/
+
+# Directorio de construcción (Vercel lo generará automáticamente)
+dist/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
