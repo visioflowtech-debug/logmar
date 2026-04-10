@@ -639,4 +639,15 @@ body.mirrored {
     margin-top: 0.5rem;
     color: #555;
     font-family: monospace;
+/* --- Símbolos LEA (Pediátricos) --- */
+.optotype-svg {
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    vertical-align: middle;
+    fill: currentColor;
 }
+
+#etdrs-line-content.lea-mode {
+    gap: 1em; /* Espaciado estandarizado para cartillas de dibujos */
+}

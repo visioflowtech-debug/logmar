@@ -1,6 +1,6 @@
 {
     "name": "logmar-app",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "LogMAR Visual Acuity Chart Application",
     "scripts": {
         "build": "node build_obfuscate.js"

@@ -35,6 +35,9 @@ const settings = {
     duochromeTargetScale: parseFloat(localStorage.getItem('duochromeTargetScale') || (typeof CONFIG !== 'undefined' ? CONFIG.duochromeTargetScale : 1.0)),
     duochromeLetterLines: parseInt(localStorage.getItem('duochromeLetterLines') || (typeof CONFIG !== 'undefined' ? CONFIG.duochromeLetterLines : 2)),
 
+    // --- Cartillas Adicionales ---
+    CARTILLAS_LEA: (typeof CONFIG !== 'undefined' ? CONFIG.CARTILLAS_LEA : {}),
+
     // --- Configuración de Espejo ---
     isMirrored: safeJsonParse('isMirrored', false)
 };
@@ -54,6 +57,7 @@ const modosEstaticos = ["Reloj Astigmático", "Test de Worth", "Rejilla de Amsle
 const modosDePantalla = [
     ...Object.keys(settings.CARTILLAS_ETDRS),
     ...Object.keys(settings.CARTILLAS_NUMEROS),
+    ...Object.keys(settings.CARTILLAS_LEA),
     "Duo-Cromo",
     "Reloj Astigmático",
     "Test de Worth",
@@ -138,7 +142,15 @@ function actualizarPantalla() {
         etdrsChart.style.letterSpacing = "normal";
 
         const cartillaActual = settings.CARTILLAS_ETDRS[modoActual] ||
-            settings.CARTILLAS_NUMEROS[modoActual];
+            settings.CARTILLAS_NUMEROS[modoActual] ||
+            settings.CARTILLAS_LEA[modoActual];
+
+        const esModoLEA = !!settings.CARTILLAS_LEA[modoActual];
+        const etdrsLineContent = document.getElementById('etdrs-line-content');
+        if (etdrsLineContent) {
+            etdrsLineContent.classList.toggle('lea-mode', esModoLEA);
+        }
+
 
         if (!cartillaActual) {
             console.error("No se encontró cartilla para:", modoActual);
@@ -170,7 +182,11 @@ function actualizarPantalla() {
                 const char = items[itemIndex];
                 const el = etdrsLetrasElements[elementIndex];
 
-                el.textContent = char; // Renderizar texto normal
+                if (esModoLEA) {
+                    el.innerHTML = renderSymbol(char);
+                } else {
+                    el.textContent = char; // Renderizar texto normal
+                }
                 el.style.display = 'inline';
             }
         }
@@ -299,6 +315,28 @@ function updateHud(modoActual) {
     debugDistancia.textContent = settings.distanciaMetros.toFixed(2);
     debugAncho.textContent = settings.anchoPantallaCm.toFixed(2);
     debugResolucion.textContent = settings.resolucionAnchoPx;
+}
+
+function renderSymbol(char) {
+    const symbolMap = {
+        'A': `<svg class="optotype-svg" viewBox="0 0 100 100">
+                <!-- Manzana (Corazón LEA) -->
+                <path d="M50,90 C30,90 10,70 10,45 C10,25 30,15 50,30 C70,15 90,25 90,45 C90,70 70,90 50,90 Z" />
+              </svg>`,
+        'H': `<svg class="optotype-svg" viewBox="0 0 100 100">
+                <!-- Casa (Pentágono) -->
+                <path d="M50,10 L90,45 L90,90 L10,90 L10,45 Z" />
+              </svg>`,
+        'C': `<svg class="optotype-svg" viewBox="0 0 100 100">
+                <!-- Círculo -->
+                <circle cx="50" cy="50" r="40" />
+              </svg>`,
+        'S': `<svg class="optotype-svg" viewBox="0 0 100 100">
+                <!-- Cuadrado -->
+                <rect x="10" y="10" width="80" height="80" />
+              </svg>`
+    };
+    return symbolMap[char] || char;
 }
 
 // --- HELPERS ---
@@ -658,6 +696,7 @@ const RemoteControl = {
         const map = {
             'sloan': 'Cartilla 1', // Mapear 'sloan' a la primera cartilla de letras
             'numbers': 'Numeros 1', // Mapear 'numbers' a la primera cartilla de números
+            'lea': 'LEA',           // Mapear 'lea' a la cartilla pediátrica
             'landolt': 'Landolt',
             'e_chart': 'E',
             'allen': 'Allen',

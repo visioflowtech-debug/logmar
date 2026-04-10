@@ -51,5 +51,22 @@ const CONFIG = {
     DUOCHROME_LETTERS: "O C",
 
     // LogMAR inicial para la prueba Dúo-Cromo (20/80)
-    duochromeInitialLogMar: 0.6
+    duochromeInitialLogMar: 0.6,
+
+    // --- 5. CARTILLA PEDIÁTRICA LEA ---
+    // Mapeo: A=Apple (Manzana), H=House (Casa), C=Circle (Círculo), S=Square (Cuadrado)
+    CARTILLAS_LEA: {
+        "LEA Pediátrica 1": [
+            "A H C S H A S C",
+            "C S A H C S A H",
+            "H A S C S H C A",
+            "S C H A A S H C",
+            "A H S C C A S H",
+            "H S C A S H A C",
+            "C A S H H C A S",
+            "S H A C A S C H",
+            "A C S H C H S A",
+            "H S A C S A H C"
+        ]
+    }
 };
