@@ -116,7 +116,8 @@ function actualizarPantalla() {
     const modoActual = modosDePantalla[indiceModoActual];
 
     const esModoETDRS = settings.CARTILLAS_ETDRS[modoActual] ||
-        settings.CARTILLAS_NUMEROS[modoActual];
+        settings.CARTILLAS_NUMEROS[modoActual] ||
+        settings.CARTILLAS_LEA[modoActual];
 
     const esPruebaLogMAR = esModoETDRS || modoActual === "Duo-Cromo";
 
