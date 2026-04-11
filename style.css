@@ -32,7 +32,6 @@ body.dark-background {
 
 /* --- ESTILOS ETDRS --- */
 #etdrs-chart {
-    /* Ahora es un contenedor que centra su contenido */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -48,7 +47,6 @@ body.dark-background {
     justify-content: center;
     align-items: center;
     gap: 0.4em;
-    /* Reducido de 1em a 0.4em para menor separación */
     transform-origin: center;
     transition: transform 0.1s ease-out;
     white-space: nowrap;
@@ -63,7 +61,6 @@ body.dark-background {
     font-weight: normal;
     font-family: 'OpticianSans', 'Courier New', monospace;
     align-items: stretch;
-    /* Asegura que los lados llenen la altura */
 }
 
 #red-side {
@@ -98,7 +95,6 @@ body.dark-background {
 #green-side span {
     display: inline-block;
 }
-
 
 /* --- ESTILOS RELOJ ASTIGMÁTICO --- */
 #astigmatism-chart {
@@ -166,7 +162,6 @@ body.dark-background {
     color: black;
 }
 
-
 /* --- ESTILOS TEST DE WORTH --- */
 #worth-test {
     position: relative;
@@ -216,217 +211,12 @@ body.dark-background {
 #amsler-grid {
     position: relative;
     width: 50vmin;
-    /* Un cuadrado grande */
     height: 50vmin;
     background-color: white;
     border: 2px solid black;
-
-    /* Dibujamos la rejilla con gradientes CSS */
     background-image:
         linear-gradient(to right, #555 1px, transparent 1px),
-        /* Líneas verticales */
         linear-gradient(to bottom, #555 1px, transparent 1px);
-    /* Líneas horizontales */
-
-    background-size: 2.5vmin 2.5vmin;
-}
-
-.amsler-center-dot {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 0.8vmin;
-    height: 0.8vmin;
-    background-color: black;
-    font-family: 'OpticianSans', 'Courier New', monospace;
-}
-
-#etdrs-line-content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.4em;
-    /* Reducido de 1em a 0.4em para menor separación */
-    transform-origin: center;
-    transition: transform 0.1s ease-out;
-    white-space: nowrap;
-}
-
-/* --- ESTILOS DUO-CROMO --- */
-#duochrome-chart {
-    display: flex;
-    width: 100%;
-    height: 100%;
-    color: black;
-    font-weight: normal;
-    font-family: 'OpticianSans', 'Courier New', monospace;
-    align-items: stretch;
-    /* Asegura que los lados llenen la altura */
-}
-
-#red-side {
-    flex: 0 0 50%;
-    width: 50%;
-    max-width: 50%;
-    background-color: rgb(255, 0, 0);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 0.2em;
-    height: 100%;
-    overflow: hidden;
-}
-
-#green-side {
-    flex: 0 0 50%;
-    width: 50%;
-    max-width: 50%;
-    background-color: rgb(0, 150, 0);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 0.2em;
-    height: 100%;
-    overflow: hidden;
-}
-
-#red-side span,
-#green-side span {
-    display: inline-block;
-}
-
-
-/* --- ESTILOS RELOJ ASTIGMÁTICO --- */
-#astigmatism-chart {
-    position: relative;
-    width: 50vmin;
-    height: 50vmin;
-}
-
-#clock-center {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 15vmin;
-    height: 15vmin;
-    background-color: white;
-    border-radius: 50%;
-    z-index: 10;
-}
-
-.line-group {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    transform-origin: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 3px;
-}
-
-.line-group .line {
-    width: 100%;
-    height: 2px;
-    background-color: black;
-}
-
-#clock-numbers {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    transform: scale(1.4);
-    z-index: 5;
-}
-
-.number-container {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    transform-origin: center;
-}
-
-.number-text {
-    font-family: Arial, sans-serif;
-    font-size: 2.0vmin;
-    font-weight: bold;
-    color: black;
-}
-
-
-/* --- ESTILOS TEST DE WORTH --- */
-#worth-test {
-    position: relative;
-    width: 20vmin;
-    height: 25vmin;
-    background-color: transparent;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-.worth-dot {
-    position: absolute;
-    width: 8vmin;
-    height: 8vmin;
-    border-radius: 50%;
-    box-shadow: 0 0 10px 3px rgba(255, 255, 255, 0.4);
-}
-
-.worth-dot.red {
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgb(255, 0, 0);
-}
-
-.worth-dot.green {
-    top: 8.5vmin;
-    background-color: rgb(0, 150, 0);
-}
-
-.worth-dot.left {
-    left: 0;
-}
-
-.worth-dot.right {
-    right: 0;
-}
-
-.worth-dot.white {
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: white;
-}
-
-/* --- ESTILOS REJILLA DE AMSLER --- */
-#amsler-grid {
-    position: relative;
-    width: 50vmin;
-    /* Un cuadrado grande */
-    height: 50vmin;
-    background-color: white;
-    border: 2px solid black;
-
-    /* Dibujamos la rejilla con gradientes CSS */
-    background-image:
-        linear-gradient(to right, #555 1px, transparent 1px),
-        /* Líneas verticales */
-        linear-gradient(to bottom, #555 1px, transparent 1px);
-    /* Líneas horizontales */
-
     background-size: 2.5vmin 2.5vmin;
 }
 
@@ -440,7 +230,6 @@ body.dark-background {
     background-color: black;
     border-radius: 50%;
 }
-
 
 /* --- ESTILOS HUD --- */
 #info {
@@ -450,6 +239,7 @@ body.dark-background {
     width: 100%;
     display: flex;
     justify-content: space-between;
+    align-items: flex-end;
     font-size: 24px;
     color: #858282;
     font-family: Arial, sans-serif;
@@ -463,6 +253,30 @@ body.dark-background {
 
 #info-snellen {
     padding-right: 15px;
+}
+
+#info-hint {
+    font-size: 13px;
+    color: #aaaaaa;
+    padding-bottom: 3px;
+}
+
+/* --- AVISO CLÍNICO --- */
+#mode-hint {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.72);
+    color: #ffcc00;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    padding: 6px 16px;
+    border-radius: 6px;
+    z-index: 200;
+    text-align: center;
+    pointer-events: none;
+    max-width: 90vw;
 }
 
 /* --- ESTILO PARA EL LINK DE CONFIGURACIÓN --- */
@@ -638,7 +452,8 @@ body.mirrored {
     color: #555;
     font-family: monospace;
 }
-/* --- Símbolos LEA (Pediátricos) --- */
+
+/* --- Símbolos LEA/Lighthouse (Pediátricos) --- */
 .optotype-svg {
     width: 1em;
     height: 1em;
@@ -647,6 +462,7 @@ body.mirrored {
     fill: currentColor;
 }
 
+/* ISO: espaciado entre optotipos = 1 tamaño de optotipo (Levi 2008 — crowding en ambliopía) */
 #etdrs-line-content.lea-mode {
-    gap: 1em; /* Espaciado estandarizado para cartillas de dibujos */
-}
+    gap: 1em;
+}
