@@ -5,7 +5,6 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "build:obfuscate": "node build_obfuscate.js",
         "typecheck": "tsc --noEmit",
         "test": "vitest run",
         "test:watch": "vitest"
