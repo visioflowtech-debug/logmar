@@ -169,9 +169,21 @@ function generateRandomLine(length: number, type: LineType): string {
     LIGHTHOUSE: LIGHTHOUSE_SYMBOLS,
   };
   const source = sources[type];
+
+  // ETDRS/Números: length ≤ source.length → muestreo sin reemplazo.
+  // Garantiza que no haya duplicados en la línea (Ferris 1982).
+  if (length <= source.length) {
+    const shuffled = [...source].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, length).join(' ');
+  }
+
+  // LEA/Lighthouse: length > source.length → con reemplazo, pero sin consecutivos.
+  // Previene "A A H C" que desorientan al paciente pediátrico.
   const result: string[] = [];
   for (let i = 0; i < length; i++) {
-    result.push(source[Math.floor(Math.random() * source.length)]!);
+    const last    = result[result.length - 1];
+    const opciones = source.filter((s) => s !== last);
+    result.push(opciones[Math.floor(Math.random() * opciones.length)]!);
   }
   return result.join(' ');
 }
