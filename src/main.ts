@@ -210,7 +210,7 @@ function renderDuochrome(): void {
     | { logMar: number; type: 'LETTERS'; count: number };
 
   const linesConfig: LineConfig[] = [
-    { logMar: 1.3, type: 'TARGET', customScale: settings.duochromeTargetScale },
+    { logMar: 1.0, type: 'TARGET', customScale: settings.duochromeTargetScale },
   ];
 
   let currentLogMar = 0.5;
@@ -497,7 +497,13 @@ window.addEventListener('keydown', (event: KeyboardEvent) => {
 
 window.addEventListener('resize', () => {
   adjustContentScale();
-  actualizarPantalla(); // Recalcular count al cambiar tamaño de ventana
+  actualizarPantalla();
+});
+
+// Cuando el browser restaura la página desde bfcache (botón Atrás),
+// el store ya inicializado no re-lee localStorage. Forzar recarga limpia.
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) window.location.reload();
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
