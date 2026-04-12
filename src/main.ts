@@ -75,62 +75,79 @@ function sessionKey(modo: string, logmar: number): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SVG — Símbolos LEA (Hyvärinen)
-// Variante de contorno (hollow): fondo blanco, trazo negro.
-// Nota clínica: la versión estándar Hyvärinen usa siluetas sólidas (1996).
-// Esta variante hollow es válida para uso clínico orientativo en consulta.
+// SVG — Símbolos LEA (Hyvärinen 1980 / ISO 8596:2009)
+//
+// IMPORTANTE CLÍNICO: Los símbolos deben ser SÓLIDOS (silueta negra rellena).
+// La versión hollow (contorno) reduce el fenómeno de crowding y sobreestima
+// la agudeza visual en pacientes con ambliopía — invalida el screening.
+// Fuente: Levi DM. Vision Research. 2008;48(5):635-654.
+//         Hyvärinen L. Acta Ophthalmol Scand Suppl. 1996;(219):50-52.
+//
+// Manzana: silueta corazón-manzana con tallo corto, SIN hoja.
+//   El niño puede decir "manzana" o "corazón" — ambas respuestas son correctas
+//   en práctica clínica pediátrica (Hyvärinen 1980, p. 509).
+// Casa: pentágono sólido SIN recortes internos (sin puerta, sin ventana).
+//   Los detalles internos afectan el crowding asimétrico.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const LEA_SVG: Record<string, string> = {
-  // Manzana (Apple) — contorno circular con tallo y hoja
+  // Manzana (Apple/Heart) — silueta corazón-manzana estándar Hyvärinen
+  // Cuerpo: dos lóbulos redondeados con hendidura inferior en V + tallo corto centrado
   A: `<svg class="optotype-svg" viewBox="0 0 100 100">
-    <ellipse fill="white" stroke="currentColor" stroke-width="8" cx="50" cy="63" rx="34" ry="29"/>
-    <path fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" d="M50,34 C52,22 63,18 68,21"/>
-    <path fill="currentColor" d="M50,32 C54,17 73,14 68,26 Q60,31 50,32 Z"/>
+    <path fill="currentColor"
+      d="M50,25 C46,20 36,18 28,22 C14,28 10,42 10,56
+         C10,74 20,90 35,90 C42,90 47,86 50,82
+         C53,86 58,90 65,90 C80,90 90,74 90,56
+         C90,42 86,28 72,22 C64,18 54,20 50,25 Z"/>
+    <rect fill="currentColor" x="46" y="10" width="8" height="18" rx="4"/>
   </svg>`,
-  // Casa (House) — contorno pentagonal con puerta sólida
+  // Casa (House) — pentágono sólido, ángulo de apice ~90°, sin recortes
+  // Proporción: techo 45% de altura total, base 55% — estándar Good-Lite
   H: `<svg class="optotype-svg" viewBox="0 0 100 100">
-    <path fill="white" stroke="currentColor" stroke-width="8" stroke-linejoin="round"
-      d="M14,90 V48 L50,12 L86,48 V90 Z"/>
-    <rect fill="currentColor" x="37" y="63" width="26" height="27"/>
+    <path fill="currentColor" d="M50,10 L90,55 L90,90 L10,90 L10,55 Z"/>
   </svg>`,
-  // Círculo (Circle) — aro
+  // Círculo (Circle) — anillo con trazo = 1/5 del diámetro (ISO 8596:2009 sec 4.1)
+  // Diámetro exterior = 80% del viewBox (80 u), stroke-width = 16 u (20%)
   C: `<svg class="optotype-svg" viewBox="0 0 100 100">
-    <circle fill="white" stroke="currentColor" stroke-width="14" cx="50" cy="50" r="33"/>
+    <circle fill="none" stroke="currentColor" stroke-width="16" cx="50" cy="50" r="32"/>
   </svg>`,
-  // Cuadrado (Square) — marco
+  // Cuadrado (Square) — marco con trazo = 1/5 del lado (ISO 8596:2009)
+  // Lado exterior = 80 u (10→90), stroke centrado en x=18, lado=64
   S: `<svg class="optotype-svg" viewBox="0 0 100 100">
-    <rect fill="white" stroke="currentColor" stroke-width="14" x="12" y="12" width="76" height="76"/>
+    <rect fill="none" stroke="currentColor" stroke-width="16" x="18" y="18" width="64" height="64"/>
   </svg>`,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SVG — Símbolos Lighthouse (Allen 1957 / Lighthouse International)
-// Siluetas sólidas, diseño estándar reconocible: manzana, casa, paraguas
+// SVG — Símbolos Lighthouse (Allen 1957 / Good-Lite)
+// Siluetas sólidas. Manzana = misma silueta corazón-manzana que LEA.
+// Casa = pentágono con puerta centrada recortada (Allen 1957) — SIN ventana lateral.
+// Paraguas = cúpula + mango + gancho curvado.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const LIGHTHOUSE_SVG: Record<string, string> = {
-  // Manzana (Apple)
+  // Manzana (Apple/Heart) — misma silueta estándar que LEA (Allen 1957)
   A: `<svg class="optotype-svg" viewBox="0 0 100 100">
     <path fill="currentColor"
-      d="M50,30 C32,30 12,44 12,64 C12,82 28,94 50,94 C72,94 88,82 88,64 C88,44 68,30 50,30 Z"/>
-    <path fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"
-      d="M50,30 C52,18 62,14 68,17"/>
-    <path fill="currentColor"
-      d="M50,28 C55,14 74,12 69,24 Q61,29 50,28 Z"/>
+      d="M50,25 C46,20 36,18 28,22 C14,28 10,42 10,56
+         C10,74 20,90 35,90 C42,90 47,86 50,82
+         C53,86 58,90 65,90 C80,90 90,74 90,56
+         C90,42 86,28 72,22 C64,18 54,20 50,25 Z"/>
+    <rect fill="currentColor" x="46" y="10" width="8" height="18" rx="4"/>
   </svg>`,
-  // Casa (House) — silueta con ventana y puerta recortadas
+  // Casa (House) — pentágono con puerta centrada recortada (Allen 1957)
+  // Nota: solo puerta centrada. La ventana lateral NO está en Allen 1957.
   H: `<svg class="optotype-svg" viewBox="0 0 100 100">
-    <path fill="currentColor" d="M13,90 V48 L50,11 L87,48 V90 Z"/>
+    <path fill="currentColor" d="M50,10 L90,55 L90,90 L10,90 L10,55 Z"/>
     <rect fill="white" x="37" y="63" width="26" height="27"/>
-    <rect fill="white" x="59" y="52" width="17" height="15"/>
   </svg>`,
-  // Paraguas (Umbrella)
+  // Paraguas (Umbrella) — cúpula semicircular + mango vertical + gancho
   U: `<svg class="optotype-svg" viewBox="0 0 100 100">
     <path fill="currentColor" d="M8,52 C8,23 26,8 50,8 C74,8 92,23 92,52 Z"/>
-    <rect fill="currentColor" x="46" y="52" width="8" height="31"/>
-    <path fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"
-      d="M54,83 Q56,96 44,90"/>
+    <rect fill="currentColor" x="46" y="52" width="8" height="30"/>
+    <path fill="currentColor"
+      d="M54,82 C62,82 62,90 62,90 C62,96 56,98 50,96
+         C46,95 44,92 46,90 L50,90 C52,92 56,91 56,88 C56,86 54,85 54,82 Z"/>
   </svg>`,
 };
 
