@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/logmar -type f ! -path \"*/\\\\.*\" ! -path \"*/.git/*\" -exec wc -l {} +)",
+      "Bash(grep -n \"fetch\\\\|xhr\\\\|request\\\\|http\\\\|api\\\\|script src\" /c/logmar/*.js /c/logmar/*.html)",
+      "Bash(grep -n \"localStorage\\\\|sessionStorage\\\\|cookie\\\\|indexedDB\" /c/logmar/*.js)",
+      "Bash(grep -n \"localStorage\" /c/logmar/*.js)",
+      "Bash(grep -n \"new Peer\\\\|Peer\\(\" /c/logmar/*.js)",
+      "Bash(curl -s https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js)",
+      "Bash(openssl dgst:*)",
+      "Bash(openssl base64:*)",
+      "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(32\\).toString\\('hex'\\)\\)\")",
+      "Bash(npm install:*)",
+      "Bash(npm test:*)"
+    ],
+    "additionalDirectories": [
+      "c:\\logmar\\.claude"
+    ]
+  }
+}

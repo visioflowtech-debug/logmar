@@ -455,13 +455,11 @@ body.mirrored {
 
 /* --- Símbolos LEA y E Tumbling (Hyvärinen 1980 / ISO 8597) --- */
 /*
- * Los spans l1-l8 reciben width/height en px desde actualizarPantalla() cuando el modo
- * es LEA o E Tumbling (ver main.ts). El SVG ocupa el 100% de ese span.
- * Esto evita la herencia ambigua de 1em en SVGs inyectados via innerHTML.
+ * El SVG recibe width/height en px directamente via style inline (ver renderSymbol /
+ * renderETumbling en main.ts). Esta clase solo provee display:block y fill para los
+ * SVGs que no requieren tamaño dinámico.
  */
 .optotype-svg {
-    width: 100%;
-    height: 100%;
     display: block;
     fill: currentColor;
 }

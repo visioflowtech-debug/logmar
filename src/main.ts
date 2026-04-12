@@ -129,16 +129,24 @@ const LEA_SVG: Record<string, string> = {
   </svg>`,
 };
 
-function renderSymbol(char: string): string {
-  return LEA_SVG[char] ?? char;
+// sizePx se inyecta como style inline en el SVG — más confiable que CSS% en SVGs
+// inyectados via innerHTML dentro de flex/inline-block (comportamiento inconsistente
+// entre navegadores con width/height:100% en ese contexto).
+function renderSymbol(char: string, sizePx: number): string {
+  const template = LEA_SVG[char];
+  if (!template) return char;
+  return template.replace(
+    '<svg ',
+    `<svg style="display:block;width:${sizePx}px;height:${sizePx}px;" `
+  );
 }
 
 // E Tumbling: letra E rotada (ISO 8597 — test para iletrados y pediátricos)
 // Geometría: viewBox 100×100, unidad=16px (1/5 del alto de 80u)
 // Barra vertical: x=10→26, y=10→90 · Travesaños: x=26→90, alto=16u, gaps=16u
-function renderETumbling(direction: string): string {
-  return `<svg class="optotype-svg optotype-e-tumbling" viewBox="0 0 100 100"
-    style="transform:rotate(${direction}deg)">
+function renderETumbling(direction: string, sizePx: number): string {
+  return `<svg class="optotype-e-tumbling" viewBox="0 0 100 100"
+    style="display:block;width:${sizePx}px;height:${sizePx}px;transform:rotate(${direction}deg)">
     <rect fill="currentColor" x="10" y="10" width="16" height="80"/>
     <rect fill="currentColor" x="26" y="10" width="64" height="16"/>
     <rect fill="currentColor" x="26" y="42" width="64" height="16"/>
@@ -439,15 +447,13 @@ function actualizarPantalla(): void {
       const char = items[i];
       if (char && el) {
         if (esModoLEA || esModoETumbling) {
-          // Asignar tamaño en px directamente al span contenedor.
-          // Los SVGs usan width/height:100% (style.css), garantizando que
-          // respeten la calibración sin depender de herencia de em en innerHTML.
+          // El tamaño en px se inyecta directo en el style del SVG (no en el span).
+          // Esto evita la resolución inconsistente de width/height:100% en SVGs inline
+          // dentro de flex/inline-block según el navegador.
           el.style.display = 'inline-block';
-          el.style.width   = `${nuevoTamanoPx}px`;
-          el.style.height  = `${nuevoTamanoPx}px`;
           el.innerHTML = esModoLEA
-            ? renderSymbol(char)
-            : renderETumbling(char);
+            ? renderSymbol(char, nuevoTamanoPx)
+            : renderETumbling(char, nuevoTamanoPx);
         } else {
           el.style.display = 'inline';
           el.textContent   = char;
