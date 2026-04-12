@@ -83,63 +83,78 @@ function sessionKey(modo: string, logmar: number): string {
 // Fuente: Levi DM. Vision Research. 2008;48(5):635-654.
 //         Hyvärinen L. Acta Ophthalmol Scand Suppl. 1996;(219):50-52.
 //
-// Manzana: silueta corazón-manzana con tallo corto, SIN hoja.
+// Manzana: contorno hueco, silueta corazón-manzana con tallo corto, SIN hoja.
 //   El niño puede decir "manzana" o "corazón" — ambas respuestas son correctas
 //   en práctica clínica pediátrica (Hyvärinen 1980, p. 509).
-// Casa: pentágono sólido SIN recortes internos (sin puerta, sin ventana).
-//   Los detalles internos afectan el crowding asimétrico.
+// Casa: contorno hueco con aleros (eaves) que sobresalen de las paredes.
+//   Los aleros son detalle anatómico clave del estándar Good-Lite (cartillas físicas).
+// stroke-width=16 en todos: regla 1/5 del tamaño del símbolo (ISO 8596:2009).
+// stroke-linecap="round" en todos: esquinas redondeadas → mancha de desenfoque uniforme.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const LEA_SVG: Record<string, string> = {
-  // Manzana (Apple/Heart) — silueta corazón-manzana estándar Hyvärinen
-  // Cuerpo: dos lóbulos redondeados con hendidura inferior en V + tallo corto centrado
+  // Manzana (Apple) — contorno hueco, silueta corazón-manzana estándar Hyvärinen
+  // Tallo corto centrado (y1=10 y2=28); cuerpo: dos lóbulos redondeados
   A: `<svg class="optotype-svg" viewBox="0 0 100 100">
-    <path fill="currentColor"
-      d="M50,25 C46,20 36,18 28,22 C14,28 10,42 10,56
-         C10,74 20,90 35,90 C42,90 47,86 50,82
-         C53,86 58,90 65,90 C80,90 90,74 90,56
-         C90,42 86,28 72,22 C64,18 54,20 50,25 Z"/>
-    <rect fill="currentColor" x="46" y="10" width="8" height="18" rx="4"/>
+    <path fill="none" stroke="currentColor" stroke-width="14"
+      stroke-linejoin="round" stroke-linecap="round"
+      d="M50,30 C46,24 36,20 28,26 C14,34 12,50 12,60
+         C12,76 22,90 37,90 C43,90 47,86 50,82
+         C53,86 57,90 63,90 C78,90 88,76 88,60
+         C88,50 86,34 72,26 C64,20 54,24 50,30 Z"/>
+    <line stroke="currentColor" stroke-width="10"
+      stroke-linecap="round" x1="50" y1="10" x2="50" y2="28"/>
   </svg>`,
-  // Casa (House) — pentágono sólido, ángulo de apice ~90°, sin recortes
-  // Proporción: techo 45% de altura total, base 55% — estándar Good-Lite
+  // Casa (House) — contorno hueco con aleros (eaves) estándar Good-Lite
+  // Aleros: techo se extiende x=5..15 (izq) y x=85..95 (der) más allá de paredes
   H: `<svg class="optotype-svg" viewBox="0 0 100 100">
-    <path fill="currentColor" d="M50,10 L90,55 L90,90 L10,90 L10,55 Z"/>
+    <path fill="none" stroke="currentColor" stroke-width="16"
+      stroke-linejoin="round" stroke-linecap="round"
+      d="M5,58 L50,10 L95,58 L85,58 L85,90 L15,90 L15,58 Z"/>
   </svg>`,
   // Círculo (Circle) — anillo con trazo = 1/5 del diámetro (ISO 8596:2009 sec 4.1)
   // Diámetro exterior = 80% del viewBox (80 u), stroke-width = 16 u (20%)
   C: `<svg class="optotype-svg" viewBox="0 0 100 100">
-    <circle fill="none" stroke="currentColor" stroke-width="16" cx="50" cy="50" r="32"/>
+    <circle fill="none" stroke="currentColor" stroke-width="16"
+      stroke-linecap="round" cx="50" cy="50" r="32"/>
   </svg>`,
   // Cuadrado (Square) — marco con trazo = 1/5 del lado (ISO 8596:2009)
   // Lado exterior = 80 u (10→90), stroke centrado en x=18, lado=64
   S: `<svg class="optotype-svg" viewBox="0 0 100 100">
-    <rect fill="none" stroke="currentColor" stroke-width="16" x="18" y="18" width="64" height="64"/>
+    <rect fill="none" stroke="currentColor" stroke-width="16"
+      stroke-linejoin="round" stroke-linecap="round"
+      x="18" y="18" width="64" height="64"/>
   </svg>`,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SVG — Símbolos Lighthouse (Allen 1957 / Good-Lite)
-// Siluetas sólidas. Manzana = misma silueta corazón-manzana que LEA.
-// Casa = pentágono con puerta centrada recortada (Allen 1957) — SIN ventana lateral.
+// Contornos huecos. Manzana = misma geometría que LEA (consistencia entre sets).
+// Casa = contorno con aleros + puerta centrada como trazo (Allen 1957) — SIN ventana.
 // Paraguas = cúpula + mango + gancho curvado.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const LIGHTHOUSE_SVG: Record<string, string> = {
-  // Manzana (Apple/Heart) — misma silueta estándar que LEA (Allen 1957)
+  // Manzana (Apple) — idéntica a LEA para consistencia inter-sets (Allen 1957)
   A: `<svg class="optotype-svg" viewBox="0 0 100 100">
-    <path fill="currentColor"
-      d="M50,25 C46,20 36,18 28,22 C14,28 10,42 10,56
-         C10,74 20,90 35,90 C42,90 47,86 50,82
-         C53,86 58,90 65,90 C80,90 90,74 90,56
-         C90,42 86,28 72,22 C64,18 54,20 50,25 Z"/>
-    <rect fill="currentColor" x="46" y="10" width="8" height="18" rx="4"/>
+    <path fill="none" stroke="currentColor" stroke-width="14"
+      stroke-linejoin="round" stroke-linecap="round"
+      d="M50,30 C46,24 36,20 28,26 C14,34 12,50 12,60
+         C12,76 22,90 37,90 C43,90 47,86 50,82
+         C53,86 57,90 63,90 C78,90 88,76 88,60
+         C88,50 86,34 72,26 C64,20 54,24 50,30 Z"/>
+    <line stroke="currentColor" stroke-width="10"
+      stroke-linecap="round" x1="50" y1="10" x2="50" y2="28"/>
   </svg>`,
-  // Casa (House) — pentágono con puerta centrada recortada (Allen 1957)
-  // Nota: solo puerta centrada. La ventana lateral NO está en Allen 1957.
+  // Casa (House) — contorno con aleros + puerta centrada (Allen 1957)
+  // Puerta: trazo en U invertida (abierta en la base) — sin relleno que dependa del fondo
   H: `<svg class="optotype-svg" viewBox="0 0 100 100">
-    <path fill="currentColor" d="M50,10 L90,55 L90,90 L10,90 L10,55 Z"/>
-    <rect fill="white" x="37" y="63" width="26" height="27"/>
+    <path fill="none" stroke="currentColor" stroke-width="16"
+      stroke-linejoin="round" stroke-linecap="round"
+      d="M5,58 L50,10 L95,58 L85,58 L85,90 L15,90 L15,58 Z"/>
+    <polyline fill="none" stroke="currentColor" stroke-width="10"
+      stroke-linecap="round" stroke-linejoin="round"
+      points="37,90 37,65 63,65 63,90"/>
   </svg>`,
   // Paraguas (Umbrella) — cúpula semicircular + mango vertical + gancho
   U: `<svg class="optotype-svg" viewBox="0 0 100 100">
