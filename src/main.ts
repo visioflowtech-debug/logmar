@@ -210,7 +210,7 @@ function renderDuochrome(): void {
     | { logMar: number; type: 'LETTERS'; count: number };
 
   const linesConfig: LineConfig[] = [
-    { logMar: 0.7, type: 'TARGET', customScale: settings.duochromeTargetScale },
+    { logMar: 1.3, type: 'TARGET', customScale: settings.duochromeTargetScale },
   ];
 
   let currentLogMar = 0.5;
