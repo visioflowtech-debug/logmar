@@ -35,7 +35,7 @@ export const CONFIG = {
 
   DEFAULT_ENABLED_LOGMAR: [1.0, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0],
 
-  // --- Cartillas ETDRS (5 letras Sloan por línea — estándar Bailey & Lovie 1976, Ferris 1982) ---
+  // --- Cartilla ETDRS (5 letras Sloan por línea — estándar Bailey & Lovie 1976, Ferris 1982) ---
   //
   // Cada índice corresponde a un valor en POSSIBLE_LOGMAR_VALUES:
   //   [0]=1.3, [1]=1.2, [2]=1.1, [3]=1.0, [4]=0.9, [5]=0.8, [6]=0.7, [7]=0.6,
@@ -45,10 +45,10 @@ export const CONFIG = {
   //   - 5 letras por línea, sin repetición dentro de la línea
   //   - Set Sloan: C D H K N O R S V Z (Sloan 1959)
   //   - Progresión 0.1 log units entre líneas (Bailey & Lovie 1976)
-  //   - Las secuencias de C1 y C2 son distintas en el mismo nivel LogMAR
-  //   - Las secuencias propias de LogMAR Pro (no son transcripciones de Precision Vision)
+  //   - La variabilidad entre sesiones la provee la aleatorización por sesión (main.ts)
+  //   - Las secuencias son propias de LogMAR Pro (no transcripciones de Precision Vision)
   CARTILLAS_ETDRS: {
-    'Cartilla 1': [
+    'ETDRS': [
       'H S R D N', // 1.3
       'C V Z O K', // 1.2
       'K H O N Z', // 1.1
@@ -66,25 +66,6 @@ export const CONFIG = {
       'C N D O R', // -0.1
       'Z H V S K', // -0.2
       'O R K N V', // -0.3
-    ],
-    'Cartilla 2': [
-      'O K C N V', // 1.3
-      'H R D Z S', // 1.2
-      'S O N K H', // 1.1
-      'Z V R D C', // 1.0
-      'C V Z O H', // 0.9
-      'D K N S R', // 0.8
-      'V O N S C', // 0.7
-      'K H R D Z', // 0.6
-      'N C H O D', // 0.5
-      'R V K Z S', // 0.4
-      'O N S V H', // 0.3
-      'R K C Z D', // 0.2
-      'H V D O N', // 0.1
-      'K S Z R C', // 0.0
-      'Z C O V D', // -0.1
-      'S H N K R', // -0.2
-      'V D R O K', // -0.3
     ],
   } as Record<string, string[]>,
 
@@ -114,6 +95,9 @@ export const CONFIG = {
   DUOCHROME_LETTERS: 'O C',
 
   // --- Cartilla LEA Pediátrica (Hyvärinen) ---
+  // Único test pediátrico estándar de la app. Las Figuras de Allen (Lighthouse)
+  // fueron eliminadas en v1.5 — reemplazadas por LEA Symbols desde la
+  // publicación de Hyvärinen (1976) como estándar internacional (AAO, AOA, ICO).
   CARTILLAS_LEA: {
     'LEA Pediátrica 1': [
       'A H C S H A S C', 'C S A H C S A H', 'H A S C S H C A', 'S C H A A S H C',
@@ -122,14 +106,6 @@ export const CONFIG = {
     ],
   } as Record<string, string[]>,
 
-  // --- Cartilla Lighthouse ---
-  CARTILLAS_LIGHTHOUSE: {
-    'Lighthouse 1': [
-      'A H U A H U A H', 'U A H U A H U A', 'H U A H U A H U', 'A U H A U H A U',
-      'H A U H A U H A', 'U H A U H A U H', 'A H U H A U A H', 'U A H A U H U A',
-      'H U A U H A H U', 'A U H H U A A U',
-    ],
-  } as Record<string, string[]>,
 } as const;
 
 export type AppConfig = typeof CONFIG;

@@ -57,10 +57,9 @@ const modeElements: Record<string, HTMLElement> = {
 const SLOAN_LETTERS     = ['C', 'D', 'H', 'K', 'N', 'O', 'R', 'S', 'V', 'Z'];
 const NUMBERS_WITH_ZERO = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 const LEA_SYMBOLS       = ['A', 'H', 'C', 'S'];
-const LIGHTHOUSE_SYMBOLS = ['A', 'H', 'U'];
 const MODOS_ESTATICOS   = ['Reloj Astigmático', 'Test de Worth', 'Rejilla de Amsler'];
 
-type LineType = 'LETTERS' | 'NUMBERS' | 'LEA' | 'LIGHTHOUSE';
+type LineType = 'LETTERS' | 'NUMBERS' | 'LEA';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Caché de aleatorización por sesión (anti-memorización — Ferris 1982)
@@ -127,49 +126,8 @@ const LEA_SVG: Record<string, string> = {
   </svg>`,
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SVG — Símbolos Lighthouse (Allen 1957 / Good-Lite)
-// Contornos huecos. Manzana = misma geometría que LEA (consistencia entre sets).
-// Casa = contorno con aleros + puerta centrada como trazo (Allen 1957) — SIN ventana.
-// Paraguas = cúpula + mango + gancho curvado.
-// ─────────────────────────────────────────────────────────────────────────────
-
-const LIGHTHOUSE_SVG: Record<string, string> = {
-  // Manzana (Apple) — idéntica a LEA para consistencia inter-sets (Allen 1957)
-  A: `<svg class="optotype-svg" viewBox="0 0 100 100">
-    <path fill="none" stroke="currentColor" stroke-width="14"
-      stroke-linejoin="round" stroke-linecap="round"
-      d="M50,30 C46,24 36,20 28,26 C14,34 12,50 12,60
-         C12,76 22,90 37,90 C43,90 47,86 50,82
-         C53,86 57,90 63,90 C78,90 88,76 88,60
-         C88,50 86,34 72,26 C64,20 54,24 50,30 Z"/>
-    <line stroke="currentColor" stroke-width="10"
-      stroke-linecap="round" x1="50" y1="10" x2="50" y2="28"/>
-  </svg>`,
-  // Casa (House) — contorno con aleros + puerta centrada (Allen 1957)
-  // Puerta: trazo en U invertida (abierta en la base) — sin relleno que dependa del fondo
-  H: `<svg class="optotype-svg" viewBox="0 0 100 100">
-    <path fill="none" stroke="currentColor" stroke-width="16"
-      stroke-linejoin="round" stroke-linecap="round"
-      d="M5,58 L50,10 L95,58 L85,58 L85,90 L15,90 L15,58 Z"/>
-    <polyline fill="none" stroke="currentColor" stroke-width="10"
-      stroke-linecap="round" stroke-linejoin="round"
-      points="37,90 37,65 63,65 63,90"/>
-  </svg>`,
-  // Paraguas (Umbrella) — cúpula semicircular + mango vertical + gancho
-  U: `<svg class="optotype-svg" viewBox="0 0 100 100">
-    <path fill="currentColor" d="M8,52 C8,23 26,8 50,8 C74,8 92,23 92,52 Z"/>
-    <rect fill="currentColor" x="46" y="52" width="8" height="30"/>
-    <path fill="currentColor"
-      d="M54,82 C62,82 62,90 62,90 C62,96 56,98 50,96
-         C46,95 44,92 46,90 L50,90 C52,92 56,91 56,88 C56,86 54,85 54,82 Z"/>
-  </svg>`,
-};
-
-function renderSymbol(char: string, isLEA: boolean, isLighthouse: boolean): string {
-  if (isLEA)        return LEA_SVG[char]        ?? char;
-  if (isLighthouse) return LIGHTHOUSE_SVG[char]  ?? char;
-  return char;
+function renderSymbol(char: string): string {
+  return LEA_SVG[char] ?? char;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -178,10 +136,9 @@ function renderSymbol(char: string, isLEA: boolean, isLighthouse: boolean): stri
 
 function generateRandomLine(length: number, type: LineType): string {
   const sources: Record<LineType, string[]> = {
-    LETTERS:    SLOAN_LETTERS,
-    NUMBERS:    NUMBERS_WITH_ZERO,
-    LEA:        LEA_SYMBOLS,
-    LIGHTHOUSE: LIGHTHOUSE_SYMBOLS,
+    LETTERS: SLOAN_LETTERS,
+    NUMBERS: NUMBERS_WITH_ZERO,
+    LEA:     LEA_SYMBOLS,
   };
   const source = sources[type];
 
@@ -192,7 +149,7 @@ function generateRandomLine(length: number, type: LineType): string {
     return shuffled.slice(0, length).join(' ');
   }
 
-  // LEA/Lighthouse: length > source.length → con reemplazo, pero sin consecutivos.
+  // LEA: length > source.length → con reemplazo, pero sin consecutivos.
   // Previene "A A H C" que desorientan al paciente pediátrico.
   const result: string[] = [];
   for (let i = 0; i < length; i++) {
@@ -208,7 +165,7 @@ function generateRandomLine(length: number, type: LineType): string {
 //
 // ETDRS/Números: exactamente 5 por línea (Ferris 1982 — "Each line contains
 //   5 letters"). Si no caben 5, se muestran los que caben (mínimo 1).
-// LEA/Lighthouse: hasta 8 (símbolos pediátricos, aún en revisión clínica).
+// LEA: hasta 8 (Hyvärinen 1980).
 //
 // Con gap=1em: N optotipos ocupan (2N−1)×letterPx píxeles horizontales.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -339,8 +296,7 @@ function updateHud(modoActual: string, optotiposCount?: number): void {
   // Hint de scoring dinámico según cantidad real de optotipos mostrados (clínico #1/#2/#5)
   const isCartilla = !!settings.CARTILLAS_ETDRS[modoActual]  ||
                      !!settings.CARTILLAS_NUMEROS[modoActual] ||
-                     !!settings.CARTILLAS_LEA[modoActual]     ||
-                     !!settings.CARTILLAS_LIGHTHOUSE[modoActual];
+                     !!settings.CARTILLAS_LEA[modoActual];
   if (isCartilla && optotiposCount !== undefined && optotiposCount > 0) {
     const minPass = Math.max(1, Math.ceil(optotiposCount * 0.6));
     infoHintElement.textContent = `${optotiposCount} opt. · mín. ${minPass}/${optotiposCount}`;
@@ -383,8 +339,7 @@ function actualizarPantalla(): void {
   const cartillaActiva =
     settings.CARTILLAS_ETDRS[modoActual] ??
     settings.CARTILLAS_NUMEROS[modoActual] ??
-    settings.CARTILLAS_LEA[modoActual] ??
-    settings.CARTILLAS_LIGHTHOUSE[modoActual];
+    settings.CARTILLAS_LEA[modoActual];
 
   const esModoETDRS    = !!cartillaActiva;
   const esPruebaLogMAR = esModoETDRS || modoActual === 'Duo-Cromo';
@@ -417,47 +372,34 @@ function actualizarPantalla(): void {
     return;
   }
 
-  // Modo ETDRS (cartillas de letras, números, LEA, Lighthouse)
+  // Modo ETDRS (cartillas de letras, números, LEA)
   if (esModoETDRS && cartillaActiva) {
     etdrsChart.classList.remove('hidden');
     const nuevoTamanoPx = calcularTamanoLogMAR(valorLogMarActual, settings);
     etdrsChart.style.fontSize = `${nuevoTamanoPx}px`;
 
-    const esModoLEA        = !!settings.CARTILLAS_LEA[modoActual];
-    const esModoLighthouse = !!settings.CARTILLAS_LIGHTHOUSE[modoActual];
-    const esModoSimbolo    = esModoLEA || esModoLighthouse;
-    const lineContent      = document.getElementById('etdrs-line-content');
-    lineContent?.classList.toggle('lea-mode', esModoSimbolo);
+    const esModoLEA   = !!settings.CARTILLAS_LEA[modoActual];
+    const lineContent = document.getElementById('etdrs-line-content');
+    lineContent?.classList.toggle('lea-mode', esModoLEA);
 
     // Cantidad de optotipos:
     //   ETDRS/Números → máx 5 (estándar Ferris 1982: "Each line contains 5 letters")
-    //   LEA/Lighthouse → máx 8 (en revisión clínica)
-    const maxOptotipos = esModoSimbolo ? 8 : 5;
+    //   LEA → máx 8 (Hyvärinen 1980)
+    const maxOptotipos = esModoLEA ? 8 : 5;
     const count = calcularCantidadOptotipos(nuevoTamanoPx, maxOptotipos);
 
-    // Selección de línea:
-    //   ETDRS/Números → secuencia fija indexada por posición en POSSIBLE_LOGMAR_VALUES
-    //   LEA/Lighthouse → aleatorización por sesión (símbolos en revisión)
-    let lineText: string;
-    if (esModoSimbolo) {
-      const key = sessionKey(modoActual, valorLogMarActual);
-      if (!sessionLines.has(key)) {
-        const tipo: LineType = esModoLEA ? 'LEA' : 'LIGHTHOUSE';
-        sessionLines.set(key, generateRandomLine(8, tipo));
-      }
-      lineText = sessionLines.get(key)!;
-    } else {
-      // Aleatorización por sesión: se genera una vez al cargar la página
-      // y se mantiene fija hasta que el clínico la regenere con R.
-      // Previene memorización entre visitas (Bailey & Lovie 1976).
-      const key = sessionKey(modoActual, valorLogMarActual);
-      if (!sessionLines.has(key)) {
-        const esModoNumeros = !!settings.CARTILLAS_NUMEROS[modoActual];
-        const tipo: LineType = esModoNumeros ? 'NUMBERS' : 'LETTERS';
-        sessionLines.set(key, generateRandomLine(5, tipo));
-      }
-      lineText = sessionLines.get(key)!;
+    // Aleatorización por sesión — previene memorización (Bailey & Lovie 1976).
+    // Se genera una vez al cargar la página y se mantiene fija hasta R.
+    const key = sessionKey(modoActual, valorLogMarActual);
+    if (!sessionLines.has(key)) {
+      let tipo: LineType;
+      if (esModoLEA)                               tipo = 'LEA';
+      else if (!!settings.CARTILLAS_NUMEROS[modoActual]) tipo = 'NUMBERS';
+      else                                          tipo = 'LETTERS';
+      const len = esModoLEA ? 8 : 5;
+      sessionLines.set(key, generateRandomLine(len, tipo));
     }
+    const lineText = sessionLines.get(key)!;
 
     const items = lineText.split(' ');
 
@@ -469,9 +411,7 @@ function actualizarPantalla(): void {
       const el   = etdrsLetrasElements[i];
       const char = items[i];
       if (char && el) {
-        el.innerHTML = (esModoLEA || esModoLighthouse)
-          ? renderSymbol(char, esModoLEA, esModoLighthouse)
-          : char;
+        el.innerHTML = esModoLEA ? renderSymbol(char) : char;
         el.style.display = 'inline';
       }
     }
@@ -512,13 +452,12 @@ window.addEventListener('keydown', (event: KeyboardEvent) => {
   }
 
   // Re-aleatorización manual — disponible para todos los modos de cartilla
-  // (ETDRS, Números, LEA, Lighthouse). Previene memorización en visitas repetidas.
+  // (ETDRS, Números, LEA). Previene memorización en visitas repetidas.
   if (event.key.toLowerCase() === KEY.RANDOMIZE) {
     const isCartilla =
       !!settings.CARTILLAS_ETDRS[currentMode]      ||
       !!settings.CARTILLAS_NUMEROS[currentMode]    ||
-      !!settings.CARTILLAS_LEA[currentMode]        ||
-      !!settings.CARTILLAS_LIGHTHOUSE[currentMode];
+      !!settings.CARTILLAS_LEA[currentMode];
     if (isCartilla) {
       sessionLines.delete(sessionKey(currentMode, valorLogMarActual));
       store.setState({ randomizedLines: {} });
@@ -666,7 +605,7 @@ const RemoteControl = {
         changeLogMarStep(-1);
         break;
       case 'reset_size': {
-        const lettersIndex = modosDePantalla.findIndex((m) => m.includes('Cartilla 1'));
+        const lettersIndex = modosDePantalla.findIndex((m) => m.includes('ETDRS'));
         store.setState({
           indiceModoActual: lettersIndex !== -1 ? lettersIndex : 0,
           valorLogMarActual: 1.0,
@@ -687,12 +626,11 @@ const RemoteControl = {
         });
         break;
       case 'randomize': {
-        // Aleatorización manual vía remoto — incluye LEA y Lighthouse (clínico #4)
+        // Aleatorización manual vía remoto — incluye ETDRS, Números y LEA (clínico #4)
         const isCartilla =
           !!settings.CARTILLAS_ETDRS[currentMode]      ||
           !!settings.CARTILLAS_NUMEROS[currentMode]     ||
-          !!settings.CARTILLAS_LEA[currentMode]         ||
-          !!settings.CARTILLAS_LIGHTHOUSE[currentMode];
+          !!settings.CARTILLAS_LEA[currentMode];
         if (isCartilla) {
           sessionLines.delete(sessionKey(currentMode, valorLogMarActual));
           store.setState({ randomizedLines: {} });
@@ -742,10 +680,9 @@ const RemoteControl = {
   setOptotypeByType(type: string): void {
     const { modosDePantalla } = store.state;
     const typeMap: Record<string, string> = {
-      sloan:      'Cartilla 1',
-      numbers:    'Numeros 1',
-      lea:        'LEA',
-      lighthouse: 'Lighthouse',
+      sloan:   'ETDRS',
+      numbers: 'Numeros 1',
+      lea:     'LEA',
     };
     const targetName = typeMap[type];
     if (!targetName) return;

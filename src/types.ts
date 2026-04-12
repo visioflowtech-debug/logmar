@@ -25,7 +25,6 @@ export interface AppSettings extends ScreenConfig {
   CARTILLAS_ETDRS: Record<string, string[]>;
   CARTILLAS_NUMEROS: Record<string, string[]>;
   CARTILLAS_LEA: Record<string, string[]>;
-  CARTILLAS_LIGHTHOUSE: Record<string, string[]>;
   DUOCHROME_LETTERS: string;
 }
 

@@ -58,11 +58,10 @@ function buildInitialSettings(): AppSettings {
     duochromeLetterLines:  readInt('duochromeLetterLines',    CONFIG.duochromeLetterLines),
     enabledLogMarValues:   safeJsonParse<number[]>('enabledLogMarValues', [...CONFIG.DEFAULT_ENABLED_LOGMAR]),
     isMirrored:            safeJsonParse<boolean>('isMirrored', false),
-    CARTILLAS_ETDRS:       { ...CONFIG.CARTILLAS_ETDRS },
-    CARTILLAS_NUMEROS:     { ...CONFIG.CARTILLAS_NUMEROS },
-    CARTILLAS_LEA:         { ...CONFIG.CARTILLAS_LEA },
-    CARTILLAS_LIGHTHOUSE:  { ...CONFIG.CARTILLAS_LIGHTHOUSE },
-    DUOCHROME_LETTERS:     CONFIG.DUOCHROME_LETTERS,
+    CARTILLAS_ETDRS:   { ...CONFIG.CARTILLAS_ETDRS },
+    CARTILLAS_NUMEROS: { ...CONFIG.CARTILLAS_NUMEROS },
+    CARTILLAS_LEA:     { ...CONFIG.CARTILLAS_LEA },
+    DUOCHROME_LETTERS: CONFIG.DUOCHROME_LETTERS,
   };
 }
 
@@ -73,7 +72,6 @@ function buildInitialState(): AppState {
     ...Object.keys(settings.CARTILLAS_ETDRS),
     ...Object.keys(settings.CARTILLAS_NUMEROS),
     ...Object.keys(settings.CARTILLAS_LEA),
-    ...Object.keys(settings.CARTILLAS_LIGHTHOUSE),
     'Duo-Cromo',
     'Reloj Astigmático',
     'Test de Worth',

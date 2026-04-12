@@ -21,10 +21,9 @@ import { CONFIG } from '../src/config';
 // Sets de caracteres válidos por tipo
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SLOAN_VALIDAS       = new Set(['C', 'D', 'H', 'K', 'N', 'O', 'R', 'S', 'V', 'Z']);
-const LEA_VALIDOS         = new Set(['A', 'H', 'C', 'S']);
-const LIGHTHOUSE_VALIDOS  = new Set(['A', 'H', 'U']);
-const DIGITOS_VALIDOS     = new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
+const SLOAN_VALIDAS   = new Set(['C', 'D', 'H', 'K', 'N', 'O', 'R', 'S', 'V', 'Z']);
+const LEA_VALIDOS     = new Set(['A', 'H', 'C', 'S']);
+const DIGITOS_VALIDOS = new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
 
 function parsearLinea(linea: string): string[] {
   return linea.trim().split(/\s+/);
@@ -138,19 +137,10 @@ describe('CARTILLAS_ETDRS — integridad de letras Sloan', () => {
     });
   }
 
-  it('Existen exactamente 2 cartillas ETDRS (Cartilla 1 y Cartilla 2)', () => {
+  it('Existe exactamente 1 cartilla ETDRS (modo único con aleatorización por sesión)', () => {
     const keys = Object.keys(CONFIG.CARTILLAS_ETDRS);
-    expect(keys).toHaveLength(2);
-    expect(keys).toContain('Cartilla 1');
-    expect(keys).toContain('Cartilla 2');
-  });
-
-  it('Cartilla 1 y Cartilla 2 tienen secuencias distintas en cada nivel LogMAR', () => {
-    const c1 = CONFIG.CARTILLAS_ETDRS['Cartilla 1']!;
-    const c2 = CONFIG.CARTILLAS_ETDRS['Cartilla 2']!;
-    for (let i = 0; i < c1.length; i++) {
-      expect(c1[i]).not.toBe(c2[i]);
-    }
+    expect(keys).toHaveLength(1);
+    expect(keys).toContain('ETDRS');
   });
 });
 
@@ -224,40 +214,6 @@ describe('CARTILLAS_LEA — integridad de símbolos Hyvärinen', () => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 6. Cartillas Lighthouse — integridad
-// ─────────────────────────────────────────────────────────────────────────────
-
-describe('CARTILLAS_LIGHTHOUSE — integridad de símbolos Lighthouse', () => {
-
-  for (const [nombre, lineas] of Object.entries(CONFIG.CARTILLAS_LIGHTHOUSE)) {
-
-    it(`${nombre}: tiene 10 líneas`, () => {
-      expect(lineas).toHaveLength(10);
-    });
-
-    it(`${nombre}: cada línea tiene 8 símbolos`, () => {
-      for (const linea of lineas) {
-        expect(parsearLinea(linea)).toHaveLength(8);
-      }
-    });
-
-    it(`${nombre}: solo usa símbolos Lighthouse válidos (A, H, U)`, () => {
-      for (const linea of lineas) {
-        for (const s of parsearLinea(linea)) {
-          expect(LIGHTHOUSE_VALIDOS.has(s)).toBe(true);
-        }
-      }
-    });
-
-    it(`${nombre}: los 3 símbolos distintos aparecen al menos una vez`, () => {
-      const encontrados = new Set(lineas.flatMap((l) => parsearLinea(l)));
-      for (const s of LIGHTHOUSE_VALIDOS) {
-        expect(encontrados.has(s)).toBe(true);
-      }
-    });
-  }
-});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 7. Duo-Cromo — configuración
