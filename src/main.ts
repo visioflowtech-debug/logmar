@@ -11,6 +11,7 @@
 
 import Peer, { type DataConnection } from 'peerjs';
 import { calcularTamanoLogMAR, convertirLogMarASnellen } from './chart_logic';
+import { CONFIG } from './config';
 import { store } from './state';
 import { LicenseManager } from './license';
 
@@ -177,17 +178,19 @@ function generateRandomLine(length: number, type: LineType): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Cantidad de optotipos por línea — cálculo dinámico según tamaño
+// Cantidad de optotipos por línea
+//
+// ETDRS/Números: exactamente 5 por línea (Ferris 1982 — "Each line contains
+//   5 letters"). Si no caben 5, se muestran los que caben (mínimo 1).
+// LEA/Lighthouse: hasta 8 (símbolos pediátricos, aún en revisión clínica).
 //
 // Con gap=1em: N optotipos ocupan (2N−1)×letterPx píxeles horizontales.
-// Se maximiza el número que cabe en el 88% del ancho de pantalla.
-// Referencia: Ferris 1982 — se usa el máximo físicamente posible.
 // ─────────────────────────────────────────────────────────────────────────────
 
-function calcularCantidadOptotipos(letterPx: number): number {
+function calcularCantidadOptotipos(letterPx: number, maxOptotipos: number): number {
   const available = window.innerWidth * 0.88;
   const maxFit    = Math.floor((available + letterPx) / (2 * letterPx));
-  return Math.max(1, Math.min(8, maxFit));
+  return Math.max(1, Math.min(maxOptotipos, maxFit));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -396,23 +399,35 @@ function actualizarPantalla(): void {
 
     const esModoLEA        = !!settings.CARTILLAS_LEA[modoActual];
     const esModoLighthouse = !!settings.CARTILLAS_LIGHTHOUSE[modoActual];
-    const esModoNumeros    = !!settings.CARTILLAS_NUMEROS[modoActual];
+    const esModoSimbolo    = esModoLEA || esModoLighthouse;
     const lineContent      = document.getElementById('etdrs-line-content');
-    lineContent?.classList.toggle('lea-mode', esModoLEA || esModoLighthouse);
+    lineContent?.classList.toggle('lea-mode', esModoSimbolo);
 
-    // Cantidad dinámica de optotipos según tamaño físico en pantalla
-    const count = calcularCantidadOptotipos(nuevoTamanoPx);
+    // Cantidad de optotipos:
+    //   ETDRS/Números → máx 5 (estándar Ferris 1982: "Each line contains 5 letters")
+    //   LEA/Lighthouse → máx 8 (en revisión clínica)
+    const maxOptotipos = esModoSimbolo ? 8 : 5;
+    const count = calcularCantidadOptotipos(nuevoTamanoPx, maxOptotipos);
 
-    // Auto-aleatorización por sesión (anti-memorización)
-    const key = sessionKey(modoActual, valorLogMarActual);
-    if (!sessionLines.has(key)) {
-      const tipo: LineType = esModoNumeros    ? 'NUMBERS'
-                           : esModoLEA        ? 'LEA'
-                           : esModoLighthouse ? 'LIGHTHOUSE'
-                           : 'LETTERS';
-      sessionLines.set(key, generateRandomLine(8, tipo));
+    // Selección de línea:
+    //   ETDRS/Números → secuencia fija indexada por posición en POSSIBLE_LOGMAR_VALUES
+    //   LEA/Lighthouse → aleatorización por sesión (símbolos en revisión)
+    let lineText: string;
+    if (esModoSimbolo) {
+      const key = sessionKey(modoActual, valorLogMarActual);
+      if (!sessionLines.has(key)) {
+        const tipo: LineType = esModoLEA ? 'LEA' : 'LIGHTHOUSE';
+        sessionLines.set(key, generateRandomLine(8, tipo));
+      }
+      lineText = sessionLines.get(key)!;
+    } else {
+      // Lookup fijo: el índice en POSSIBLE_LOGMAR_VALUES corresponde al índice del array
+      const lineIndex = CONFIG.POSSIBLE_LOGMAR_VALUES.findIndex(
+        (v) => Math.abs(v - valorLogMarActual) < 0.001,
+      );
+      lineText = (lineIndex >= 0 ? cartillaActiva[lineIndex] : undefined) ?? 'D H S R N';
     }
-    const lineText = sessionLines.get(key)!;
+
     const items = lineText.split(' ');
 
     // Ocultar todos los slots
@@ -465,16 +480,14 @@ window.addEventListener('keydown', (event: KeyboardEvent) => {
     return;
   }
 
-  // Re-aleatorización manual (clínico #4 — LEA y Lighthouse incluidos)
+  // Re-aleatorización manual — solo para LEA y Lighthouse (símbolos en revisión).
+  // ETDRS y Números usan secuencias fijas (no aleatorias) — R no tiene efecto en ellos.
   if (event.key.toLowerCase() === KEY.RANDOMIZE) {
-    const isCartilla =
-      !!settings.CARTILLAS_ETDRS[currentMode]      ||
-      !!settings.CARTILLAS_NUMEROS[currentMode]     ||
-      !!settings.CARTILLAS_LEA[currentMode]         ||
+    const isSimbolo =
+      !!settings.CARTILLAS_LEA[currentMode] ||
       !!settings.CARTILLAS_LIGHTHOUSE[currentMode];
-    if (isCartilla) {
+    if (isSimbolo) {
       sessionLines.delete(sessionKey(currentMode, valorLogMarActual));
-      // Forzar re-render sin cambio de estado semántico
       store.setState({ randomizedLines: {} });
       return;
     }

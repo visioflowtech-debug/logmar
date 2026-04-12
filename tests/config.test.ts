@@ -101,13 +101,13 @@ describe('CARTILLAS_ETDRS — integridad de letras Sloan', () => {
 
   for (const [nombre, lineas] of Object.entries(CONFIG.CARTILLAS_ETDRS)) {
 
-    it(`${nombre}: tiene 10 líneas`, () => {
-      expect(lineas).toHaveLength(10);
+    it(`${nombre}: tiene 17 líneas (una por cada valor en POSSIBLE_LOGMAR_VALUES)`, () => {
+      expect(lineas).toHaveLength(17);
     });
 
-    it(`${nombre}: cada línea tiene 8 caracteres`, () => {
+    it(`${nombre}: cada línea tiene exactamente 5 letras (estándar ETDRS — Ferris 1982)`, () => {
       for (const linea of lineas) {
-        expect(parsearLinea(linea)).toHaveLength(8);
+        expect(parsearLinea(linea)).toHaveLength(5);
       }
     });
 
@@ -119,8 +119,22 @@ describe('CARTILLAS_ETDRS — integridad de letras Sloan', () => {
       }
     });
 
-    it(`${nombre}: no hay líneas duplicadas`, () => {
+    it(`${nombre}: no hay letras repetidas dentro de la misma línea`, () => {
+      for (const linea of lineas) {
+        const letras = parsearLinea(linea);
+        expect(new Set(letras).size).toBe(letras.length);
+      }
+    });
+
+    it(`${nombre}: no hay líneas duplicadas entre sí`, () => {
       expect(new Set(lineas).size).toBe(lineas.length);
+    });
+
+    it(`${nombre}: las 10 letras Sloan aparecen en la cartilla`, () => {
+      const encontradas = new Set(lineas.flatMap((l) => parsearLinea(l)));
+      for (const letra of SLOAN_VALIDAS) {
+        expect(encontradas.has(letra)).toBe(true);
+      }
     });
   }
 
@@ -129,6 +143,14 @@ describe('CARTILLAS_ETDRS — integridad de letras Sloan', () => {
     expect(keys).toHaveLength(2);
     expect(keys).toContain('Cartilla 1');
     expect(keys).toContain('Cartilla 2');
+  });
+
+  it('Cartilla 1 y Cartilla 2 tienen secuencias distintas en cada nivel LogMAR', () => {
+    const c1 = CONFIG.CARTILLAS_ETDRS['Cartilla 1']!;
+    const c2 = CONFIG.CARTILLAS_ETDRS['Cartilla 2']!;
+    for (let i = 0; i < c1.length; i++) {
+      expect(c1[i]).not.toBe(c2[i]);
+    }
   });
 });
 
@@ -140,13 +162,20 @@ describe('CARTILLAS_NUMEROS — integridad', () => {
 
   for (const [nombre, lineas] of Object.entries(CONFIG.CARTILLAS_NUMEROS)) {
 
-    it(`${nombre}: tiene 10 líneas`, () => {
-      expect(lineas).toHaveLength(10);
+    it(`${nombre}: tiene 17 líneas (una por cada valor en POSSIBLE_LOGMAR_VALUES)`, () => {
+      expect(lineas).toHaveLength(17);
     });
 
-    it(`${nombre}: cada línea tiene 8 dígitos`, () => {
+    it(`${nombre}: cada línea tiene exactamente 5 dígitos`, () => {
       for (const linea of lineas) {
-        expect(parsearLinea(linea)).toHaveLength(8);
+        expect(parsearLinea(linea)).toHaveLength(5);
+      }
+    });
+
+    it(`${nombre}: no hay dígitos repetidos dentro de la misma línea`, () => {
+      for (const linea of lineas) {
+        const digitos = parsearLinea(linea);
+        expect(new Set(digitos).size).toBe(digitos.length);
       }
     });
 
