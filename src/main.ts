@@ -11,7 +11,6 @@
 
 import Peer, { type DataConnection } from 'peerjs';
 import { calcularTamanoLogMAR, convertirLogMarASnellen } from './chart_logic';
-import { CONFIG } from './config';
 import { store } from './state';
 import { LicenseManager } from './license';
 
@@ -421,11 +420,16 @@ function actualizarPantalla(): void {
       }
       lineText = sessionLines.get(key)!;
     } else {
-      // Lookup fijo: el índice en POSSIBLE_LOGMAR_VALUES corresponde al índice del array
-      const lineIndex = CONFIG.POSSIBLE_LOGMAR_VALUES.findIndex(
-        (v) => Math.abs(v - valorLogMarActual) < 0.001,
-      );
-      lineText = (lineIndex >= 0 ? cartillaActiva[lineIndex] : undefined) ?? 'D H S R N';
+      // Aleatorización por sesión: se genera una vez al cargar la página
+      // y se mantiene fija hasta que el clínico la regenere con R.
+      // Previene memorización entre visitas (Bailey & Lovie 1976).
+      const key = sessionKey(modoActual, valorLogMarActual);
+      if (!sessionLines.has(key)) {
+        const esModoNumeros = !!settings.CARTILLAS_NUMEROS[modoActual];
+        const tipo: LineType = esModoNumeros ? 'NUMBERS' : 'LETTERS';
+        sessionLines.set(key, generateRandomLine(5, tipo));
+      }
+      lineText = sessionLines.get(key)!;
     }
 
     const items = lineText.split(' ');
@@ -480,13 +484,15 @@ window.addEventListener('keydown', (event: KeyboardEvent) => {
     return;
   }
 
-  // Re-aleatorización manual — solo para LEA y Lighthouse (símbolos en revisión).
-  // ETDRS y Números usan secuencias fijas (no aleatorias) — R no tiene efecto en ellos.
+  // Re-aleatorización manual — disponible para todos los modos de cartilla
+  // (ETDRS, Números, LEA, Lighthouse). Previene memorización en visitas repetidas.
   if (event.key.toLowerCase() === KEY.RANDOMIZE) {
-    const isSimbolo =
-      !!settings.CARTILLAS_LEA[currentMode] ||
+    const isCartilla =
+      !!settings.CARTILLAS_ETDRS[currentMode]      ||
+      !!settings.CARTILLAS_NUMEROS[currentMode]    ||
+      !!settings.CARTILLAS_LEA[currentMode]        ||
       !!settings.CARTILLAS_LIGHTHOUSE[currentMode];
-    if (isSimbolo) {
+    if (isCartilla) {
       sessionLines.delete(sessionKey(currentMode, valorLogMarActual));
       store.setState({ randomizedLines: {} });
       return;
