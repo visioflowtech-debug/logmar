@@ -453,16 +453,21 @@ body.mirrored {
     font-family: monospace;
 }
 
-/* --- Símbolos LEA (Pediátricos — Hyvärinen 1980) --- */
+/* --- Símbolos LEA y E Tumbling (Hyvärinen 1980 / ISO 8597) --- */
+/*
+ * Los spans l1-l8 reciben width/height en px desde actualizarPantalla() cuando el modo
+ * es LEA o E Tumbling (ver main.ts). El SVG ocupa el 100% de ese span.
+ * Esto evita la herencia ambigua de 1em en SVGs inyectados via innerHTML.
+ */
 .optotype-svg {
-    width: 1em;
-    height: 1em;
-    display: inline-block;
-    vertical-align: middle;
+    width: 100%;
+    height: 100%;
+    display: block;
     fill: currentColor;
 }
 
-/* ISO: espaciado entre optotipos = 1 tamaño de optotipo (Levi 2008 — crowding en ambliopía) */
+/* ISO: espaciado entre optotipos = 1 tamaño de optotipo (Levi 2008 — crowding en ambliopía).
+ * gap:1em es relativo al font-size de #etdrs-chart (div normal) → herencia confiable. */
 #etdrs-line-content.lea-mode {
     gap: 1em;
 }
@@ -474,20 +479,39 @@ body.mirrored {
     transform-origin: center;
 }
 
-/* --- PUNTO DE FIJACIÓN --- */
+/* --- PUNTO DE FIJACIÓN PEDIÁTRICO --- */
 #fixation-target {
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.fixation-star {
-    width: 30vmin;
-    height: 30vmin;
-    animation: fixation-pulse 2.5s ease-in-out infinite;
+/* Cara de gato: flotación suave para atraer y mantener la atención foveal */
+.fixation-cat {
+    width: 36vmin;
+    height: 36vmin;
+    animation: cat-float 3.2s ease-in-out infinite;
+    overflow: visible;
 }
 
-@keyframes fixation-pulse {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.3; }
+/* Parpadeo: ciclo de 4 s, ojos abiertos ~88% del tiempo → no distractor */
+.cat-eye-group {
+    animation: cat-blink 4s ease-in-out infinite;
+}
+
+/* Ojo derecho desfasado 80 ms para aspecto natural */
+.cat-eye-right {
+    animation-delay: 0.08s;
+}
+
+@keyframes cat-blink {
+    0%, 87%, 100% { transform: scaleY(1); }
+    93%            { transform: scaleY(0.05); }
+    96%            { transform: scaleY(1); }
+}
+
+/* Flotación vertical muy sutil (±5 px) — capta atención sin distraer la fijación */
+@keyframes cat-float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-5px); }
 }

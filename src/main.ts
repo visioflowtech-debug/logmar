@@ -426,22 +426,32 @@ function actualizarPantalla(): void {
 
     const items = lineText.split(' ');
 
-    // Ocultar todos los slots
-    etdrsLetrasElements.forEach((el) => (el.style.display = 'none'));
+    // Ocultar todos los slots y limpiar tamaños previos
+    etdrsLetrasElements.forEach((el) => {
+      el.style.display = 'none';
+      el.style.width   = '';
+      el.style.height  = '';
+    });
 
     // Mostrar los primeros `count` optotipos
     for (let i = 0; i < count; i++) {
       const el   = etdrsLetrasElements[i];
       const char = items[i];
       if (char && el) {
-        if (esModoLEA) {
-          el.innerHTML = renderSymbol(char);
-        } else if (esModoETumbling) {
-          el.innerHTML = renderETumbling(char);
+        if (esModoLEA || esModoETumbling) {
+          // Asignar tamaño en px directamente al span contenedor.
+          // Los SVGs usan width/height:100% (style.css), garantizando que
+          // respeten la calibración sin depender de herencia de em en innerHTML.
+          el.style.display = 'inline-block';
+          el.style.width   = `${nuevoTamanoPx}px`;
+          el.style.height  = `${nuevoTamanoPx}px`;
+          el.innerHTML = esModoLEA
+            ? renderSymbol(char)
+            : renderETumbling(char);
         } else {
-          el.textContent = char;
+          el.style.display = 'inline';
+          el.textContent   = char;
         }
-        el.style.display = 'inline';
       }
     }
 

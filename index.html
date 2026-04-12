@@ -138,10 +138,54 @@
     </div>
 
     <div id="fixation-target" class="hidden">
-      <svg class="fixation-star" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-        <line x1="100" y1="20" x2="100" y2="180" stroke="black" stroke-width="4" stroke-linecap="round"/>
-        <line x1="20" y1="100" x2="180" y2="100" stroke="black" stroke-width="4" stroke-linecap="round"/>
-        <circle cx="100" cy="100" r="6" fill="black"/>
+      <!--
+        Cara de gato pediátrica — Punto de Fijación
+        Diseñada para maximizar la atención central foveal en pacientes preescolares.
+        CENTRO ÓPTICO: la nariz (triángulo) está exactamente en (100, 100) del viewBox.
+        Animación: parpadeo lento (4 s/ciclo) — no distractora, solo mantiene atención.
+      -->
+      <svg class="fixation-cat" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <!-- Cabeza -->
+        <ellipse cx="100" cy="108" rx="66" ry="62" fill="#F7C948"/>
+
+        <!-- Oreja izquierda (externa + interna) -->
+        <polygon points="42,72 30,20 72,54" fill="#F7C948"/>
+        <polygon points="46,67 36,28 68,54" fill="#F4A0B0"/>
+
+        <!-- Oreja derecha (externa + interna) -->
+        <polygon points="158,72 170,20 128,54" fill="#F7C948"/>
+        <polygon points="154,67 164,28 132,54" fill="#F4A0B0"/>
+
+        <!-- Ojo izquierdo: grupo animado para parpadeo -->
+        <g class="cat-eye-group" style="transform-box:fill-box;transform-origin:center">
+          <ellipse cx="73" cy="90" rx="13" ry="13" fill="#4DB06A"/>
+          <ellipse cx="73" cy="90" rx="5"  ry="10" fill="#1A1A1A"/>
+          <circle  cx="77" cy="86" r="3"           fill="white" opacity="0.85"/>
+        </g>
+
+        <!-- Ojo derecho: parpadeo levemente desfasado -->
+        <g class="cat-eye-group cat-eye-right" style="transform-box:fill-box;transform-origin:center">
+          <ellipse cx="127" cy="90" rx="13" ry="13" fill="#4DB06A"/>
+          <ellipse cx="127" cy="90" rx="5"  ry="10" fill="#1A1A1A"/>
+          <circle  cx="131" cy="86" r="3"            fill="white" opacity="0.85"/>
+        </g>
+
+        <!-- NARIZ en el centro óptico exacto (100, 100) -->
+        <polygon points="100,94 95,104 105,104" fill="#D96B6B"/>
+
+        <!-- Boca -->
+        <path d="M95,104 Q100,112 105,104"
+              fill="none" stroke="#C05050" stroke-width="2" stroke-linecap="round"/>
+
+        <!-- Bigotes izquierda -->
+        <line x1="6"  y1="100" x2="87"  y2="100" stroke="#9A8060" stroke-width="1.5" stroke-linecap="round" opacity="0.65"/>
+        <line x1="6"  y1="109" x2="87"  y2="107" stroke="#9A8060" stroke-width="1.5" stroke-linecap="round" opacity="0.65"/>
+        <line x1="10" y1="118" x2="87"  y2="114" stroke="#9A8060" stroke-width="1.5" stroke-linecap="round" opacity="0.65"/>
+
+        <!-- Bigotes derecha -->
+        <line x1="194" y1="100" x2="113" y2="100" stroke="#9A8060" stroke-width="1.5" stroke-linecap="round" opacity="0.65"/>
+        <line x1="194" y1="109" x2="113" y2="107" stroke="#9A8060" stroke-width="1.5" stroke-linecap="round" opacity="0.65"/>
+        <line x1="190" y1="118" x2="113" y2="114" stroke="#9A8060" stroke-width="1.5" stroke-linecap="round" opacity="0.65"/>
       </svg>
     </div>
 
