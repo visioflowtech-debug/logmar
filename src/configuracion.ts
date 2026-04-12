@@ -75,10 +75,40 @@ document.addEventListener('DOMContentLoaded', () => {
       .sort((a, b) => b - a);
   }
 
+  // --- Detección HiDPI / Retina (clínico #2.2) ---
+  // La resolución que debe ingresarse es la LÓGICA (CSS), no la física del panel.
+  // En pantallas Retina/4K con DPR>1, la resolución física es DPR × resolución CSS.
+  // Usar la resolución física causaría optotipos hasta 2× más grandes de lo correcto.
+  function getResolucionLogicaCSS(): number {
+    return window.innerWidth; // píxeles CSS lógicos (independiente del DPR)
+  }
+
+  function renderHiDPIHint(): void {
+    const dpr       = window.devicePixelRatio ?? 1;
+    const cssWidth  = getResolucionLogicaCSS();
+    const physWidth = Math.round(cssWidth * dpr);
+    const hintEl    = document.getElementById('hidpi-hint');
+    if (!hintEl) return;
+    if (dpr > 1) {
+      hintEl.innerHTML =
+        `⚠️ <strong>Pantalla HiDPI detectada (DPR=${dpr.toFixed(1)})</strong>: ` +
+        `Resolución física: <strong>${physWidth} px</strong> — ` +
+        `Resolución CSS lógica: <strong>${cssWidth} px</strong>. ` +
+        `<strong>Usa ${cssWidth} px</strong> (NO uses ${physWidth} px; causaría optotipos ${dpr}× más grandes).`;
+      hintEl.style.display = 'block';
+    } else {
+      hintEl.innerHTML =
+        `✅ Pantalla estándar (DPR=1). Resolución CSS = resolución física: <strong>${cssWidth} px</strong>.`;
+      hintEl.style.display = 'block';
+    }
+  }
+
   // --- Cargar ajustes ---
   function loadSettings(): void {
+    // Si no hay valor guardado, pre-rellenar con resolución CSS lógica detectada
+    const savedResolucion = localStorage.getItem('resolucionAnchoPx');
     anchoPantallaCm.value        = localStorage.getItem('anchoPantallaCm')        ?? String(CONFIG.anchoPantallaCm);
-    resolucionAnchoPx.value      = localStorage.getItem('resolucionAnchoPx')      ?? String(CONFIG.resolucionAnchoPx);
+    resolucionAnchoPx.value      = savedResolucion                                ?? String(getResolucionLogicaCSS());
     distanciaMetros.value        = localStorage.getItem('distanciaMetros')        ?? String(CONFIG.distanciaMetros);
     valorLogMarInicial.value     = localStorage.getItem('valorLogMarInicial')     ?? String(CONFIG.valorLogMarInicial);
     duochromeInitialLogMar.value = localStorage.getItem('duochromeInitialLogMar') ?? String(CONFIG.duochromeInitialLogMar);
@@ -87,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     calibrationFactor.value      = localStorage.getItem('calibrationFactor')      ?? String(CONFIG.calibrationFactor);
     loadLogMarCheckboxes();
     updateReferenceTable();
+    renderHiDPIHint();
   }
 
   // --- Guardar ajustes ---

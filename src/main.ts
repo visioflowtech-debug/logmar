@@ -15,34 +15,33 @@ import { store } from './state';
 import { LicenseManager } from './license';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Referencias DOM
-// ─────────────────────────────────────────────────────────────────────────────
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Calibración obligatoria en primer inicio (clínico #7)
-// Si el usuario nunca ha configurado la pantalla, redirigir a calibración.
 // ─────────────────────────────────────────────────────────────────────────────
 
 if (localStorage.getItem('anchoPantallaCm') === null) {
   window.location.replace('/configuracion');
 }
 
-const bodyElement = document.body;
-const infoHud        = document.getElementById('info')!;
-const logMarElement  = document.getElementById('info-logmar')!;
+// ─────────────────────────────────────────────────────────────────────────────
+// Referencias DOM
+// ─────────────────────────────────────────────────────────────────────────────
+
+const bodyElement     = document.body;
+const infoHud         = document.getElementById('info')!;
+const logMarElement   = document.getElementById('info-logmar')!;
 const infoHintElement = document.getElementById('info-hint')!;
-const snellenElement = document.getElementById('info-snellen')!;
+const snellenElement  = document.getElementById('info-snellen')!;
 const modeHintElement = document.getElementById('mode-hint')!;
-const etdrsChart     = document.getElementById('etdrs-chart')!;
+const etdrsChart      = document.getElementById('etdrs-chart')!;
 const etdrsLetrasElements = [1, 2, 3, 4, 5, 6, 7, 8].map((n) =>
   document.getElementById(`l${n}`)!
 );
-const duochromeChart  = document.getElementById('duochrome-chart')!;
-const duochromeRed    = document.getElementById('red-side')!;
-const duochromeGreen  = document.getElementById('green-side')!;
+const duochromeChart   = document.getElementById('duochrome-chart')!;
+const duochromeRed     = document.getElementById('red-side')!;
+const duochromeGreen   = document.getElementById('green-side')!;
 const astigmatismChart = document.getElementById('astigmatism-chart')!;
-const worthTest       = document.getElementById('worth-test')!;
-const amslerGrid      = document.getElementById('amsler-grid')!;
+const worthTest        = document.getElementById('worth-test')!;
+const amslerGrid       = document.getElementById('amsler-grid')!;
 
 const modeElements: Record<string, HTMLElement> = {
   'Duo-Cromo':          duochromeChart,
@@ -51,36 +50,88 @@ const modeElements: Record<string, HTMLElement> = {
   'Rejilla de Amsler':  amslerGrid,
 };
 
-const etdrsDisplayRules: Record<string, [number, number]> = {
-  '1.0': [1, 2],
-  '0.9': [2, 1], '0.8': [2, 1], '0.7': [2, 1],
-  '0.6': [3, 1],
-  '0.5': [4, 0],
-  '0.4': [5, 0], '0.3': [5, 0],
-  '0.2': [6, 0],
-  '0.1': [7, 0],
-  '0.0': [8, 0], '-0.1': [8, 0], '-0.2': [8, 0], '-0.3': [8, 0],
-};
+// ─────────────────────────────────────────────────────────────────────────────
+// Vocabularios de optotipos
+// ─────────────────────────────────────────────────────────────────────────────
 
-const SLOAN_LETTERS    = ['C', 'D', 'H', 'K', 'N', 'O', 'R', 'S', 'V', 'Z'];
+const SLOAN_LETTERS     = ['C', 'D', 'H', 'K', 'N', 'O', 'R', 'S', 'V', 'Z'];
 const NUMBERS_WITH_ZERO = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-const MODOS_ESTATICOS  = ['Reloj Astigmático', 'Test de Worth', 'Rejilla de Amsler'];
+const LEA_SYMBOLS       = ['A', 'H', 'C', 'S'];
+const LIGHTHOUSE_SYMBOLS = ['A', 'H', 'U'];
+const MODOS_ESTATICOS   = ['Reloj Astigmático', 'Test de Worth', 'Rejilla de Amsler'];
+
+type LineType = 'LETTERS' | 'NUMBERS' | 'LEA' | 'LIGHTHOUSE';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Renderizado de símbolos SVG (LEA y Lighthouse)
+// Caché de aleatorización por sesión (anti-memorización — Ferris 1982)
+// Se resetea automáticamente al recargar la página (nueva sesión clínica).
+// Clave: `${modo}_${logmar}` → línea aleatoria de 8 optotipos
+// ─────────────────────────────────────────────────────────────────────────────
+
+const sessionLines = new Map<string, string>();
+
+function sessionKey(modo: string, logmar: number): string {
+  return `${modo}_${logmar.toFixed(1)}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SVG — Símbolos LEA (Hyvärinen)
+// Variante de contorno (hollow): fondo blanco, trazo negro.
+// Nota clínica: la versión estándar Hyvärinen usa siluetas sólidas (1996).
+// Esta variante hollow es válida para uso clínico orientativo en consulta.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const LEA_SVG: Record<string, string> = {
-  A: `<svg class="optotype-svg" viewBox="0 0 100 100"><path fill="currentColor" d="M50,30 C65,10 90,20 90,52 C90,80 70,92 50,92 C30,92 10,80 10,52 C10,20 35,10 50,30 Z"/></svg>`,
-  H: `<svg class="optotype-svg" viewBox="0 0 100 100"><path fill="currentColor" d="M15,90 V45 L50,12 L85,45 V90 Z"/></svg>`,
-  C: `<svg class="optotype-svg" viewBox="0 0 100 100"><circle fill="currentColor" cx="50" cy="50" r="42"/></svg>`,
-  S: `<svg class="optotype-svg" viewBox="0 0 100 100"><rect fill="currentColor" x="10" y="10" width="80" height="80"/></svg>`,
+  // Manzana (Apple) — contorno circular con tallo y hoja
+  A: `<svg class="optotype-svg" viewBox="0 0 100 100">
+    <ellipse fill="white" stroke="currentColor" stroke-width="8" cx="50" cy="63" rx="34" ry="29"/>
+    <path fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" d="M50,34 C52,22 63,18 68,21"/>
+    <path fill="currentColor" d="M50,32 C54,17 73,14 68,26 Q60,31 50,32 Z"/>
+  </svg>`,
+  // Casa (House) — contorno pentagonal con puerta sólida
+  H: `<svg class="optotype-svg" viewBox="0 0 100 100">
+    <path fill="white" stroke="currentColor" stroke-width="8" stroke-linejoin="round"
+      d="M14,90 V48 L50,12 L86,48 V90 Z"/>
+    <rect fill="currentColor" x="37" y="63" width="26" height="27"/>
+  </svg>`,
+  // Círculo (Circle) — aro
+  C: `<svg class="optotype-svg" viewBox="0 0 100 100">
+    <circle fill="white" stroke="currentColor" stroke-width="14" cx="50" cy="50" r="33"/>
+  </svg>`,
+  // Cuadrado (Square) — marco
+  S: `<svg class="optotype-svg" viewBox="0 0 100 100">
+    <rect fill="white" stroke="currentColor" stroke-width="14" x="12" y="12" width="76" height="76"/>
+  </svg>`,
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SVG — Símbolos Lighthouse (Allen 1957 / Lighthouse International)
+// Siluetas sólidas, diseño estándar reconocible: manzana, casa, paraguas
+// ─────────────────────────────────────────────────────────────────────────────
+
 const LIGHTHOUSE_SVG: Record<string, string> = {
-  A: `<svg class="optotype-svg" viewBox="0 0 100 100"><path fill="currentColor" d="M50,30 C65,10 90,20 90,50 C90,75 70,90 50,90 C30,90 10,75 10,50 C10,20 35,10 50,30 Z"/></svg>`,
-  H: `<svg class="optotype-svg" viewBox="0 0 100 100"><path fill="currentColor" d="M15,90 V45 L50,12 L85,45 V90 Z M55,75 V55 H45 V75 Z" fill-rule="evenodd"/></svg>`,
-  U: `<svg class="optotype-svg" viewBox="4 4 92 92"><path fill="currentColor" d="M50,15 C30,15 15,35 15,55 L85,55 C85,35 70,15 50,15 Z"/><rect fill="currentColor" x="47" y="55" width="6" height="25" rx="3"/></svg>`,
+  // Manzana (Apple)
+  A: `<svg class="optotype-svg" viewBox="0 0 100 100">
+    <path fill="currentColor"
+      d="M50,30 C32,30 12,44 12,64 C12,82 28,94 50,94 C72,94 88,82 88,64 C88,44 68,30 50,30 Z"/>
+    <path fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"
+      d="M50,30 C52,18 62,14 68,17"/>
+    <path fill="currentColor"
+      d="M50,28 C55,14 74,12 69,24 Q61,29 50,28 Z"/>
+  </svg>`,
+  // Casa (House) — silueta con ventana y puerta recortadas
+  H: `<svg class="optotype-svg" viewBox="0 0 100 100">
+    <path fill="currentColor" d="M13,90 V48 L50,11 L87,48 V90 Z"/>
+    <rect fill="white" x="37" y="63" width="26" height="27"/>
+    <rect fill="white" x="59" y="52" width="17" height="15"/>
+  </svg>`,
+  // Paraguas (Umbrella)
+  U: `<svg class="optotype-svg" viewBox="0 0 100 100">
+    <path fill="currentColor" d="M8,52 C8,23 26,8 50,8 C74,8 92,23 92,52 Z"/>
+    <rect fill="currentColor" x="46" y="52" width="8" height="31"/>
+    <path fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"
+      d="M54,83 Q56,96 44,90"/>
+  </svg>`,
 };
 
 function renderSymbol(char: string, isLEA: boolean, isLighthouse: boolean): string {
@@ -90,16 +141,36 @@ function renderSymbol(char: string, isLEA: boolean, isLighthouse: boolean): stri
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Helpers de generación de líneas
+// Generación de líneas aleatorias
 // ─────────────────────────────────────────────────────────────────────────────
 
-function generateRandomLine(length: number, type: 'LETTERS' | 'NUMBERS'): string {
-  const source = type === 'NUMBERS' ? NUMBERS_WITH_ZERO : SLOAN_LETTERS;
+function generateRandomLine(length: number, type: LineType): string {
+  const sources: Record<LineType, string[]> = {
+    LETTERS:    SLOAN_LETTERS,
+    NUMBERS:    NUMBERS_WITH_ZERO,
+    LEA:        LEA_SYMBOLS,
+    LIGHTHOUSE: LIGHTHOUSE_SYMBOLS,
+  };
+  const source = sources[type];
   const result: string[] = [];
   for (let i = 0; i < length; i++) {
     result.push(source[Math.floor(Math.random() * source.length)]!);
   }
   return result.join(' ');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cantidad de optotipos por línea — cálculo dinámico según tamaño
+//
+// Con gap=1em: N optotipos ocupan (2N−1)×letterPx píxeles horizontales.
+// Se maximiza el número que cabe en el 88% del ancho de pantalla.
+// Referencia: Ferris 1982 — se usa el máximo físicamente posible.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function calcularCantidadOptotipos(letterPx: number): number {
+  const available = window.innerWidth * 0.88;
+  const maxFit    = Math.floor((available + letterPx) / (2 * letterPx));
+  return Math.max(1, Math.min(8, maxFit));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -131,7 +202,7 @@ function toggleMirrorMode(): void {
 
 function renderDuochrome(): void {
   const { settings } = store.state;
-  duochromeRed.innerHTML = '';
+  duochromeRed.innerHTML   = '';
   duochromeGreen.innerHTML = '';
 
   type LineConfig =
@@ -146,29 +217,29 @@ function renderDuochrome(): void {
   const letterLinesCount = settings.duochromeLetterLines;
 
   for (let i = 0; i < letterLinesCount; i++) {
-    let letterCount = Math.min(4 + i, 6);
+    const letterCount = Math.min(4 + i, 6);
     linesConfig.push({ logMar: currentLogMar, type: 'LETTERS', count: letterCount });
-    if (currentLogMar > 0.4)       currentLogMar = 0.3;
-    else if (currentLogMar > 0.2)  currentLogMar = 0.1;
-    else if (currentLogMar > 0.0)  currentLogMar = 0.0;
-    else                           currentLogMar -= 0.1;
+    if (currentLogMar > 0.4)      currentLogMar = 0.3;
+    else if (currentLogMar > 0.2) currentLogMar = 0.1;
+    else if (currentLogMar > 0.0) currentLogMar = 0.0;
+    else                          currentLogMar -= 0.1;
     if (currentLogMar < -0.3) break;
   }
 
-  const redFragment  = document.createDocumentFragment();
+  const redFragment   = document.createDocumentFragment();
   const greenFragment = document.createDocumentFragment();
-  const settingsSinCalibracion = { ...settings, calibrationFactor: 1.0 };
 
   linesConfig.forEach((line) => {
-    let fontSizePx = calcularTamanoLogMAR(line.logMar, settingsSinCalibracion);
+    // Aplicar calibrationFactor en Duo-Cromo (consistencia entre modos)
+    let fontSizePx = calcularTamanoLogMAR(line.logMar, settings);
     if (line.type === 'TARGET') fontSizePx *= line.customScale;
 
     const makeContainer = (): HTMLDivElement => {
       const div = document.createElement('div');
-      div.style.fontSize     = `${fontSizePx}px`;
-      div.style.lineHeight   = '1.5';
-      div.style.display      = 'flex';
-      div.style.gap          = '0.5em';
+      div.style.fontSize      = `${fontSizePx}px`;
+      div.style.lineHeight    = '1.5';
+      div.style.display       = 'flex';
+      div.style.gap           = '1em'; // ISO: espaciado = 1 tamaño de letra (Ferris 1982)
       div.style.justifyContent = 'center';
       return div;
     };
@@ -214,17 +285,22 @@ const MODE_HINTS: Record<string, string> = {
   'Rejilla de Amsler': 'Distancia: 30 cm · Tape el ojo no dominante · Fijar vista en el punto central',
 };
 
-function updateHud(modoActual: string): void {
+function updateHud(modoActual: string, optotiposCount?: number): void {
   const { valorLogMarActual, settings } = store.state;
   logMarElement.textContent  = `LogMAR: ${valorLogMarActual.toFixed(1)} (${modoActual})`;
   snellenElement.textContent = `Snellen: ${convertirLogMarASnellen(valorLogMarActual)}`;
 
-  // Hint de scoring: variante 8-optotipos (clínico #1/#2)
+  // Hint de scoring dinámico según cantidad real de optotipos mostrados (clínico #1/#2/#5)
   const isCartilla = !!settings.CARTILLAS_ETDRS[modoActual]  ||
                      !!settings.CARTILLAS_NUMEROS[modoActual] ||
                      !!settings.CARTILLAS_LEA[modoActual]     ||
                      !!settings.CARTILLAS_LIGHTHOUSE[modoActual];
-  infoHintElement.textContent = isCartilla ? '8 opt. · mín. 4/8' : '';
+  if (isCartilla && optotiposCount !== undefined && optotiposCount > 0) {
+    const minPass = Math.max(1, Math.ceil(optotiposCount * 0.6));
+    infoHintElement.textContent = `${optotiposCount} opt. · mín. ${minPass}/${optotiposCount}`;
+  } else {
+    infoHintElement.textContent = '';
+  }
 
   // Aviso clínico por modo
   const hint = MODE_HINTS[modoActual];
@@ -255,8 +331,7 @@ function adjustContentScale(): void {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function actualizarPantalla(): void {
-  const { valorLogMarActual, indiceModoActual, settings, modosDePantalla, randomizedLines } =
-    store.state;
+  const { valorLogMarActual, indiceModoActual, settings, modosDePantalla } = store.state;
   const modoActual = modosDePantalla[indiceModoActual]!;
 
   const cartillaActiva =
@@ -265,7 +340,7 @@ function actualizarPantalla(): void {
     settings.CARTILLAS_LEA[modoActual] ??
     settings.CARTILLAS_LIGHTHOUSE[modoActual];
 
-  const esModoETDRS   = !!cartillaActiva;
+  const esModoETDRS    = !!cartillaActiva;
   const esPruebaLogMAR = esModoETDRS || modoActual === 'Duo-Cromo';
 
   bodyElement.classList.toggle('dark-background', modoActual === 'Test de Worth');
@@ -275,13 +350,28 @@ function actualizarPantalla(): void {
   Object.values(modeElements).forEach((el) => el.classList.add('hidden'));
   etdrsChart.classList.add('hidden');
 
+  // Modo estático (Duo-Cromo, Reloj, Worth, Amsler)
   if (!esModoETDRS && modeElements[modoActual]) {
     modeElements[modoActual]!.classList.remove('hidden');
+
+    // Amsler Grid: tamaño calculado según calibración para 30 cm (Amsler 1953)
+    // Área estándar: 2 × 30cm × tan(10°) ≈ 10.58 cm × 10.58 cm = 20° campo central
+    if (modoActual === 'Rejilla de Amsler') {
+      const pxPerCm     = settings.resolucionAnchoPx / settings.anchoPantallaCm;
+      const sizeCm      = 2 * 30 * Math.tan(10 * Math.PI / 180); // ≈ 10.58 cm
+      const sizePx      = sizeCm * pxPerCm * settings.calibrationFactor;
+      const cellPx      = sizePx / 20; // 20 divisiones = 1° cada una
+      amslerGrid.style.width          = `${sizePx}px`;
+      amslerGrid.style.height         = `${sizePx}px`;
+      amslerGrid.style.backgroundSize = `${cellPx}px ${cellPx}px`;
+    }
+
     if (modoActual === 'Duo-Cromo') renderDuochrome();
     updateHud(modoActual);
     return;
   }
 
+  // Modo ETDRS (cartillas de letras, números, LEA, Lighthouse)
   if (esModoETDRS && cartillaActiva) {
     etdrsChart.classList.remove('hidden');
     const nuevoTamanoPx = calcularTamanoLogMAR(valorLogMarActual, settings);
@@ -289,28 +379,32 @@ function actualizarPantalla(): void {
 
     const esModoLEA        = !!settings.CARTILLAS_LEA[modoActual];
     const esModoLighthouse = !!settings.CARTILLAS_LIGHTHOUSE[modoActual];
+    const esModoNumeros    = !!settings.CARTILLAS_NUMEROS[modoActual];
     const lineContent      = document.getElementById('etdrs-line-content');
     lineContent?.classList.toggle('lea-mode', esModoLEA || esModoLighthouse);
 
-    // Selección de línea
-    let indiceDeLinea = Math.round(10 - valorLogMarActual * 10);
-    indiceDeLinea = Math.max(0, Math.min(cartillaActiva.length - 1, indiceDeLinea));
+    // Cantidad dinámica de optotipos según tamaño físico en pantalla
+    const count = calcularCantidadOptotipos(nuevoTamanoPx);
 
-    const lineText =
-      randomizedLines[valorLogMarActual.toFixed(1)] ?? cartillaActiva[indiceDeLinea]!;
+    // Auto-aleatorización por sesión (anti-memorización)
+    const key = sessionKey(modoActual, valorLogMarActual);
+    if (!sessionLines.has(key)) {
+      const tipo: LineType = esModoNumeros    ? 'NUMBERS'
+                           : esModoLEA        ? 'LEA'
+                           : esModoLighthouse ? 'LIGHTHOUSE'
+                           : 'LETTERS';
+      sessionLines.set(key, generateRandomLine(8, tipo));
+    }
+    const lineText = sessionLines.get(key)!;
     const items = lineText.split(' ');
 
     // Ocultar todos los slots
     etdrsLetrasElements.forEach((el) => (el.style.display = 'none'));
 
-    const rule = etdrsDisplayRules[valorLogMarActual.toFixed(1)] ??
-      (valorLogMarActual < 0.1 ? [8, 0] : [5, 0]) as [number, number];
-    const [count, start] = rule;
-
+    // Mostrar los primeros `count` optotipos
     for (let i = 0; i < count; i++) {
-      const itemIndex = start + i;
-      const el = etdrsLetrasElements[itemIndex];
-      const char = items[itemIndex];
+      const el   = etdrsLetrasElements[i];
+      const char = items[i];
       if (char && el) {
         el.innerHTML = (esModoLEA || esModoLighthouse)
           ? renderSymbol(char, esModoLEA, esModoLighthouse)
@@ -318,9 +412,12 @@ function actualizarPantalla(): void {
         el.style.display = 'inline';
       }
     }
+
+    requestAnimationFrame(adjustContentScale);
+    updateHud(modoActual, count);
+    return;
   }
 
-  requestAnimationFrame(adjustContentScale);
   updateHud(modoActual);
 }
 
@@ -342,8 +439,7 @@ const KEY = {
 window.addEventListener('keydown', (event: KeyboardEvent) => {
   if (!LicenseManager.isActivated()) return;
 
-  const { indiceModoActual, settings, modosDePantalla, randomizedLines, valorLogMarActual } =
-    store.state;
+  const { indiceModoActual, settings, modosDePantalla, valorLogMarActual } = store.state;
   const currentMode = modosDePantalla[indiceModoActual]!;
 
   // Modo espejo
@@ -352,15 +448,17 @@ window.addEventListener('keydown', (event: KeyboardEvent) => {
     return;
   }
 
-  // Aleatorización (solo en modos de texto/números)
+  // Re-aleatorización manual (clínico #4 — LEA y Lighthouse incluidos)
   if (event.key.toLowerCase() === KEY.RANDOMIZE) {
-    const esModoETDRS   = !!settings.CARTILLAS_ETDRS[currentMode];
-    const esModoNumeros = !!settings.CARTILLAS_NUMEROS[currentMode];
-    if (esModoETDRS || esModoNumeros) {
-      const newLine = generateRandomLine(8, esModoNumeros ? 'NUMBERS' : 'LETTERS');
-      store.setState({
-        randomizedLines: { ...randomizedLines, [valorLogMarActual.toFixed(1)]: newLine },
-      });
+    const isCartilla =
+      !!settings.CARTILLAS_ETDRS[currentMode]      ||
+      !!settings.CARTILLAS_NUMEROS[currentMode]     ||
+      !!settings.CARTILLAS_LEA[currentMode]         ||
+      !!settings.CARTILLAS_LIGHTHOUSE[currentMode];
+    if (isCartilla) {
+      sessionLines.delete(sessionKey(currentMode, valorLogMarActual));
+      // Forzar re-render sin cambio de estado semántico
+      store.setState({ randomizedLines: {} });
       return;
     }
   }
@@ -397,7 +495,10 @@ window.addEventListener('keydown', (event: KeyboardEvent) => {
   }
 });
 
-window.addEventListener('resize', adjustContentScale);
+window.addEventListener('resize', () => {
+  adjustContentScale();
+  actualizarPantalla(); // Recalcular count al cambiar tamaño de ventana
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Control Remoto (PeerJS)
@@ -428,9 +529,9 @@ const RemoteControl = {
   setup(): void {
     this.hostId = this.generateShortId();
 
-    const remoteLink     = document.getElementById('remote-link');
-    const remoteModal    = document.getElementById('remote-modal');
-    const closeBtn       = document.getElementById('close-remote-modal');
+    const remoteLink      = document.getElementById('remote-link');
+    const remoteModal     = document.getElementById('remote-modal');
+    const closeBtn        = document.getElementById('close-remote-modal');
     const remoteIdDisplay = document.getElementById('remote-id-display');
     const remoteUrlDisplay = document.getElementById('remote-url-display');
     const remoteQr        = document.getElementById('remote-qr') as HTMLImageElement | null;
@@ -465,14 +566,15 @@ const RemoteControl = {
       this.conn = conn;
       const modal = document.getElementById('remote-modal');
       if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
-      conn.on('data', (data: unknown) => this.handleCommand(data as { action: string; value?: string | null }));
+      conn.on('data', (data: unknown) =>
+        this.handleCommand(data as { action: string; value?: string | null }));
     });
 
     this.peer.on('error', (err: Error & { type?: string }) => {
       console.error('PeerJS Error:', err);
       if (err.type === 'unavailable-id') {
         this.hostId = this.generateShortId();
-        this.peer = null;
+        this.peer   = null;
         this.startHost();
       }
     });
@@ -481,8 +583,7 @@ const RemoteControl = {
   handleCommand(data: { action: string; value?: string | null }): void {
     if (!LicenseManager.isActivated()) return;
 
-    const { indiceModoActual, modosDePantalla, settings, randomizedLines, valorLogMarActual } =
-      store.state;
+    const { indiceModoActual, modosDePantalla, settings, valorLogMarActual } = store.state;
     const currentMode = modosDePantalla[indiceModoActual]!;
 
     if (currentMode === 'Duo-Cromo' &&
@@ -517,13 +618,15 @@ const RemoteControl = {
         });
         break;
       case 'randomize': {
-        const esModoNumeros = !!settings.CARTILLAS_NUMEROS[currentMode];
-        const esModoETDRS   = !!settings.CARTILLAS_ETDRS[currentMode];
-        if (esModoETDRS || esModoNumeros) {
-          const newLine = generateRandomLine(8, esModoNumeros ? 'NUMBERS' : 'LETTERS');
-          store.setState({
-            randomizedLines: { ...randomizedLines, [valorLogMarActual.toFixed(1)]: newLine },
-          });
+        // Aleatorización manual vía remoto — incluye LEA y Lighthouse (clínico #4)
+        const isCartilla =
+          !!settings.CARTILLAS_ETDRS[currentMode]      ||
+          !!settings.CARTILLAS_NUMEROS[currentMode]     ||
+          !!settings.CARTILLAS_LEA[currentMode]         ||
+          !!settings.CARTILLAS_LIGHTHOUSE[currentMode];
+        if (isCartilla) {
+          sessionLines.delete(sessionKey(currentMode, valorLogMarActual));
+          store.setState({ randomizedLines: {} });
         }
         break;
       }
@@ -570,8 +673,10 @@ const RemoteControl = {
   setOptotypeByType(type: string): void {
     const { modosDePantalla } = store.state;
     const typeMap: Record<string, string> = {
-      sloan: 'Cartilla 1', numbers: 'Numeros 1',
-      lea: 'LEA', lighthouse: 'Lighthouse',
+      sloan:      'Cartilla 1',
+      numbers:    'Numeros 1',
+      lea:        'LEA',
+      lighthouse: 'Lighthouse',
     };
     const targetName = typeMap[type];
     if (!targetName) return;
@@ -586,14 +691,10 @@ const RemoteControl = {
 // Inicialización
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Aplicar modo espejo si estaba activo
 if (store.state.settings.isMirrored) {
   bodyElement.classList.add('mirrored');
 }
 
-// Inicializar licencia y control remoto
 LicenseManager.init();
 RemoteControl.init();
-
-// Renderizado inicial (el store no dispara sin un setState)
 actualizarPantalla();

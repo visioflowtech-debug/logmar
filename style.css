@@ -46,7 +46,7 @@ body.dark-background {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 0.4em;
+    gap: 1em; /* ISO/ETDRS: espaciado entre optotipos = 1 tamaño de letra (Ferris 1982) */
     transform-origin: center;
     transition: transform 0.1s ease-out;
     white-space: nowrap;
