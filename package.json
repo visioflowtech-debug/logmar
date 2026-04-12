@@ -1,6 +1,6 @@
 {
     "name": "logmar-app",
-    "version": "1.3.0",
+    "version": "1.5.0",
     "description": "LogMAR Visual Acuity Chart Application",
     "scripts": {
         "dev": "vite",
@@ -10,7 +10,6 @@
         "test:watch": "vitest"
     },
     "dependencies": {
-        "javascript-obfuscator": "^4.1.0",
         "peerjs": "^1.5.5"
     },
     "engines": {

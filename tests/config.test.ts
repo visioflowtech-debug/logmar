@@ -1,7 +1,7 @@
 /**
  * tests/config.test.ts
  *
- * Tests de integridad para src/config.ts — cartillas ETDRS, LEA, Lighthouse, Números.
+ * Tests de integridad para src/config.ts — cartillas ETDRS, LEA, Números.
  *
  * Objetivo: detectar regresiones en los sets de optotipos clínicos.
  * NO valida la ciencia (eso es tarea del agente clinico),
@@ -11,7 +11,6 @@
  *   - Sloan (1959) — New test charts for the measurement of visual acuity
  *   - Ferris et al. (1982) — ETDRS: C D H K N O R S V Z
  *   - Lea Hyvärinen — LEA Symbols (Apple, House, Circle, Square)
- *   - Lighthouse International — Lighthouse Pediatric symbols
  */
 
 import { describe, it, expect } from 'vitest';
@@ -216,7 +215,7 @@ describe('CARTILLAS_LEA — integridad de símbolos Hyvärinen', () => {
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 7. Duo-Cromo — configuración
+// 6. Duo-Cromo — configuración
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('Duo-Cromo — configuración', () => {

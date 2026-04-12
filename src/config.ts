@@ -1,14 +1,13 @@
 /**
  * config.ts — Configuración inmutable por defecto de LogMAR Pro
  *
- * Los optotipos ETDRS/LEA/Lighthouse son estándar oftalmológico internacional.
+ * Los optotipos ETDRS/LEA son estándar oftalmológico internacional.
  * NO modificar sin revisión médica y validación del agente `clinico`.
  *
  * Referencias:
  *   - Sloan (1959): C D H K N O R S V Z
  *   - Ferris et al. (1982): ETDRS chart
  *   - Lea Hyvärinen: símbolos pediátricos (Apple, House, Circle, Square)
- *   - Lighthouse International: figuras pediátricas (Apple, House, Umbrella)
  */
 
 export const CONFIG = {

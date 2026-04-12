@@ -411,7 +411,11 @@ function actualizarPantalla(): void {
       const el   = etdrsLetrasElements[i];
       const char = items[i];
       if (char && el) {
-        el.innerHTML = esModoLEA ? renderSymbol(char) : char;
+        if (esModoLEA) {
+          el.innerHTML = renderSymbol(char);
+        } else {
+          el.textContent = char;
+        }
         el.style.display = 'inline';
       }
     }
