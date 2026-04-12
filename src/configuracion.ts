@@ -6,6 +6,7 @@
  */
 
 import { CONFIG } from './config';
+import { calcularTamanoLogMAR } from './chart_logic';
 
 document.addEventListener('DOMContentLoaded', () => {
   // --- Referencias al DOM ---
@@ -22,6 +23,101 @@ document.addEventListener('DOMContentLoaded', () => {
   const calibrationFactor      = document.getElementById('calibrationFactor')      as HTMLInputElement;
   const referenceList          = document.getElementById('reference-list')!;
   const logmarCheckboxesContainer = document.getElementById('logmar-checkboxes')!;
+
+  // --- Referencias a las nuevas herramientas de calibración ---
+  const letterPreviewBox   = document.getElementById('letter-preview-box') as HTMLElement;
+  const letterPreviewLabel = document.getElementById('letter-preview-label')!;
+  const calibrationStats   = document.getElementById('calibration-stats')!;
+  const measuredSizeInput  = document.getElementById('measured-size') as HTMLInputElement;
+  const autoCalibrateBtn   = document.getElementById('auto-calibrate-btn')!;
+  const calibrationWarning = document.getElementById('calibration-warning')!;
+
+  // --- Vista previa de letra en tiempo real (calibración clínica) ---
+  // Renderiza una caja con el tamaño real en píxeles para LogMAR 1.0.
+  // El usuario puede medirla con regla y usar "Auto-calibrar".
+  function updateLivePreview(): void {
+    const dist   = parseFloat(distanciaMetros.value)    || CONFIG.distanciaMetros;
+    const ancho  = parseFloat(anchoPantallaCm.value)    || CONFIG.anchoPantallaCm;
+    const resol  = parseFloat(resolucionAnchoPx.value)  || getResolucionLogicaCSS();
+    const factor = parseFloat(calibrationFactor.value)  || 1.0;
+
+    // Tamaño físico esperado: solo depende de geometría (distancia + LogMAR 1.0)
+    // Referencia: ISO 8596:2009 — Ferris et al. 1982
+    const marMin     = Math.pow(10, 1.0); // 10 arcminutos
+    const angleRad   = (marMin * 5 / 60) * (Math.PI / 180);
+    const expectedCm = dist * 100 * Math.tan(angleRad);
+
+    // Tamaño en píxeles calculado con la configuración actual
+    const sizePx = calcularTamanoLogMAR(1.0, {
+      distanciaMetros: dist,
+      anchoPantallaCm: ancho,
+      resolucionAnchoPx: resol,
+      calibrationFactor: factor,
+    });
+
+    // Cuántas letras cabrían con este tamaño (clínico: contexto de cantidad)
+    const available = window.innerWidth * 0.88;
+    const maxFit    = Math.max(1, Math.min(8, Math.floor((available + sizePx) / (2 * sizePx))));
+
+    // Actualizar caja de preview (clampear para que no desborde)
+    const clampedPx = Math.min(Math.max(sizePx, 6), window.innerWidth * 0.8);
+    if (letterPreviewBox) {
+      letterPreviewBox.style.height = `${clampedPx}px`;
+      letterPreviewBox.style.width  = `${clampedPx}px`;
+    }
+
+    // Etiqueta descriptiva
+    letterPreviewLabel.innerHTML =
+      `LogMAR 1.0 · distancia <strong>${dist.toFixed(1)} m</strong> → ` +
+      `tamaño esperado: <strong>${expectedCm.toFixed(2)} cm</strong> · ` +
+      `calculado: <strong>${sizePx.toFixed(0)} px</strong> · ` +
+      `letras en pantalla: <strong>${maxFit}</strong>`;
+
+    // Estadísticas de densidad
+    const pxPerCm         = resol / ancho;
+    const detectedPxPerCm = getResolucionLogicaCSS() / ancho;
+    calibrationStats.textContent =
+      `Densidad configurada: ${pxPerCm.toFixed(1)} px/cm · ` +
+      `Densidad detectada: ${detectedPxPerCm.toFixed(1)} px/cm`;
+
+    // Advertencia si la resolución configurada difiere de la CSS detectada (DPI bug)
+    const cssWidth = getResolucionLogicaCSS();
+    const resRatio = resol / cssWidth;
+    if (Math.abs(resRatio - 1) > 0.05) {
+      calibrationWarning.style.display = 'block';
+      calibrationWarning.innerHTML =
+        `⚠️ La resolución configurada (<strong>${Math.round(resol)} px</strong>) ` +
+        `difiere de la resolución CSS detectada (<strong>${cssWidth} px</strong>). ` +
+        `Esto causará optotipos incorrectos. Usa <strong>${cssWidth} px</strong>.`;
+    } else {
+      calibrationWarning.style.display = 'none';
+    }
+  }
+
+  // --- Auto-calibración a partir de medición física ---
+  // El usuario mide la caja de preview con una regla.
+  // calibrationFactor_nuevo = factor_actual × (esperado_cm / medido_cm)
+  function autoCalibrate(): void {
+    const measured = parseFloat(measuredSizeInput.value);
+    if (!measured || measured <= 0) {
+      alert('Ingresa la medida real de la caja en centímetros.');
+      return;
+    }
+    const dist       = parseFloat(distanciaMetros.value) || CONFIG.distanciaMetros;
+    const marMin     = Math.pow(10, 1.0);
+    const angleRad   = (marMin * 5 / 60) * (Math.PI / 180);
+    const expectedCm = dist * 100 * Math.tan(angleRad);
+
+    const currentFactor  = parseFloat(calibrationFactor.value) || 1.0;
+    const correctedFactor = currentFactor * (expectedCm / measured);
+    calibrationFactor.value = correctedFactor.toFixed(3);
+    updateLivePreview();
+    updateReferenceTable();
+
+    statusMsg.textContent = `Factor ajustado a ${correctedFactor.toFixed(3)} · Guarda los cambios.`;
+    statusMsg.style.color = '#0066cc';
+    setTimeout(() => { statusMsg.textContent = ''; }, 5000);
+  }
 
   // --- Tabla de referencia de tamaños ---
   function updateReferenceTable(): void {
@@ -118,6 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadLogMarCheckboxes();
     updateReferenceTable();
     renderHiDPIHint();
+    updateLivePreview();
   }
 
   // --- Guardar ajustes ---
@@ -150,6 +247,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  distanciaMetros.addEventListener('input', updateReferenceTable);
+  distanciaMetros.addEventListener('input', () => { updateReferenceTable(); updateLivePreview(); });
+  anchoPantallaCm.addEventListener('input', updateLivePreview);
+  resolucionAnchoPx.addEventListener('input', updateLivePreview);
+  calibrationFactor.addEventListener('input', updateLivePreview);
+  autoCalibrateBtn.addEventListener('click', autoCalibrate);
   loadSettings();
 });
