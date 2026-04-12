@@ -466,3 +466,28 @@ body.mirrored {
 #etdrs-line-content.lea-mode {
     gap: 1em;
 }
+
+/* --- E TUMBLING (ISO 8597) --- */
+/* transform-box:fill-box garantiza que transform-origin:center sea relativo al propio SVG */
+.optotype-e-tumbling {
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+/* --- PUNTO DE FIJACIÓN --- */
+#fixation-target {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.fixation-star {
+    width: 30vmin;
+    height: 30vmin;
+    animation: fixation-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes fixation-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+}

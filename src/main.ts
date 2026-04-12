@@ -42,24 +42,27 @@ const duochromeGreen   = document.getElementById('green-side')!;
 const astigmatismChart = document.getElementById('astigmatism-chart')!;
 const worthTest        = document.getElementById('worth-test')!;
 const amslerGrid       = document.getElementById('amsler-grid')!;
+const fixationTarget   = document.getElementById('fixation-target')!;
 
 const modeElements: Record<string, HTMLElement> = {
   'Duo-Cromo':          duochromeChart,
   'Reloj Astigmático':  astigmatismChart,
   'Test de Worth':      worthTest,
   'Rejilla de Amsler':  amslerGrid,
+  'Punto de Fijación':  fixationTarget,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Vocabularios de optotipos
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SLOAN_LETTERS     = ['C', 'D', 'H', 'K', 'N', 'O', 'R', 'S', 'V', 'Z'];
-const NUMBERS_WITH_ZERO = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-const LEA_SYMBOLS       = ['A', 'H', 'C', 'S'];
-const MODOS_ESTATICOS   = ['Reloj Astigmático', 'Test de Worth', 'Rejilla de Amsler'];
+const SLOAN_LETTERS        = ['C', 'D', 'H', 'K', 'N', 'O', 'R', 'S', 'V', 'Z'];
+const NUMBERS_WITH_ZERO    = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+const LEA_SYMBOLS          = ['A', 'H', 'C', 'S'];
+const TUMBLING_DIRECTIONS  = ['0', '90', '180', '270'];
+const MODOS_ESTATICOS      = ['Reloj Astigmático', 'Test de Worth', 'Rejilla de Amsler', 'Punto de Fijación'];
 
-type LineType = 'LETTERS' | 'NUMBERS' | 'LEA';
+type LineType = 'LETTERS' | 'NUMBERS' | 'LEA' | 'TUMBLING';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Caché de aleatorización por sesión (anti-memorización — Ferris 1982)
@@ -130,15 +133,29 @@ function renderSymbol(char: string): string {
   return LEA_SVG[char] ?? char;
 }
 
+// E Tumbling: letra E rotada (ISO 8597 — test para iletrados y pediátricos)
+// Geometría: viewBox 100×100, unidad=16px (1/5 del alto de 80u)
+// Barra vertical: x=10→26, y=10→90 · Travesaños: x=26→90, alto=16u, gaps=16u
+function renderETumbling(direction: string): string {
+  return `<svg class="optotype-svg optotype-e-tumbling" viewBox="0 0 100 100"
+    style="transform:rotate(${direction}deg)">
+    <rect fill="currentColor" x="10" y="10" width="16" height="80"/>
+    <rect fill="currentColor" x="26" y="10" width="64" height="16"/>
+    <rect fill="currentColor" x="26" y="42" width="64" height="16"/>
+    <rect fill="currentColor" x="26" y="74" width="64" height="16"/>
+  </svg>`;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Generación de líneas aleatorias
 // ─────────────────────────────────────────────────────────────────────────────
 
 function generateRandomLine(length: number, type: LineType): string {
   const sources: Record<LineType, string[]> = {
-    LETTERS: SLOAN_LETTERS,
-    NUMBERS: NUMBERS_WITH_ZERO,
-    LEA:     LEA_SYMBOLS,
+    LETTERS:  SLOAN_LETTERS,
+    NUMBERS:  NUMBERS_WITH_ZERO,
+    LEA:      LEA_SYMBOLS,
+    TUMBLING: TUMBLING_DIRECTIONS,
   };
   const source = sources[type];
 
@@ -286,6 +303,8 @@ const MODE_HINTS: Record<string, string> = {
   'Duo-Cromo':         'Requiere filtros rojo-verde · Preguntar en cuál lado las letras se ven más nítidas',
   'Test de Worth':     'Paciente usa gafas rojo-verde · OD = filtro rojo, OI = filtro verde',
   'Rejilla de Amsler': 'Distancia: 30 cm · Tape el ojo no dominante · Fijar vista en el punto central',
+  'E Tumbling':        'Paciente señala la dirección de la "E" con la mano · 4 orientaciones posibles',
+  'Punto de Fijación': 'Fijación monocular · Tape el ojo no examinado',
 };
 
 function updateHud(modoActual: string, optotiposCount?: number): void {
@@ -294,8 +313,9 @@ function updateHud(modoActual: string, optotiposCount?: number): void {
   snellenElement.textContent = `Snellen: ${convertirLogMarASnellen(valorLogMarActual)}`;
 
   // Hint de scoring dinámico según cantidad real de optotipos mostrados (clínico #1/#2/#5)
-  const isCartilla = !!settings.CARTILLAS_ETDRS[modoActual]  ||
-                     !!settings.CARTILLAS_NUMEROS[modoActual] ||
+  const isCartilla = !!settings.CARTILLAS_ETDRS[modoActual]     ||
+                     !!settings.CARTILLAS_E_TUMBLING[modoActual] ||
+                     !!settings.CARTILLAS_NUMEROS[modoActual]    ||
                      !!settings.CARTILLAS_LEA[modoActual];
   if (isCartilla && optotiposCount !== undefined && optotiposCount > 0) {
     const minPass = Math.max(1, Math.ceil(optotiposCount * 0.6));
@@ -338,6 +358,7 @@ function actualizarPantalla(): void {
 
   const cartillaActiva =
     settings.CARTILLAS_ETDRS[modoActual] ??
+    settings.CARTILLAS_E_TUMBLING[modoActual] ??
     settings.CARTILLAS_NUMEROS[modoActual] ??
     settings.CARTILLAS_LEA[modoActual];
 
@@ -378,12 +399,13 @@ function actualizarPantalla(): void {
     const nuevoTamanoPx = calcularTamanoLogMAR(valorLogMarActual, settings);
     etdrsChart.style.fontSize = `${nuevoTamanoPx}px`;
 
-    const esModoLEA   = !!settings.CARTILLAS_LEA[modoActual];
+    const esModoLEA       = !!settings.CARTILLAS_LEA[modoActual];
+    const esModoETumbling = !!settings.CARTILLAS_E_TUMBLING[modoActual];
     const lineContent = document.getElementById('etdrs-line-content');
     lineContent?.classList.toggle('lea-mode', esModoLEA);
 
     // Cantidad de optotipos:
-    //   ETDRS/Números → máx 5 (estándar Ferris 1982: "Each line contains 5 letters")
+    //   ETDRS/Números/E Tumbling → máx 5 (estándar Ferris 1982)
     //   LEA → máx 8 (Hyvärinen 1980)
     const maxOptotipos = esModoLEA ? 8 : 5;
     const count = calcularCantidadOptotipos(nuevoTamanoPx, maxOptotipos);
@@ -393,9 +415,10 @@ function actualizarPantalla(): void {
     const key = sessionKey(modoActual, valorLogMarActual);
     if (!sessionLines.has(key)) {
       let tipo: LineType;
-      if (esModoLEA)                               tipo = 'LEA';
+      if (esModoLEA)                                     tipo = 'LEA';
+      else if (esModoETumbling)                          tipo = 'TUMBLING';
       else if (!!settings.CARTILLAS_NUMEROS[modoActual]) tipo = 'NUMBERS';
-      else                                          tipo = 'LETTERS';
+      else                                               tipo = 'LETTERS';
       const len = esModoLEA ? 8 : 5;
       sessionLines.set(key, generateRandomLine(len, tipo));
     }
@@ -413,6 +436,8 @@ function actualizarPantalla(): void {
       if (char && el) {
         if (esModoLEA) {
           el.innerHTML = renderSymbol(char);
+        } else if (esModoETumbling) {
+          el.innerHTML = renderETumbling(char);
         } else {
           el.textContent = char;
         }
@@ -460,6 +485,7 @@ window.addEventListener('keydown', (event: KeyboardEvent) => {
   if (event.key.toLowerCase() === KEY.RANDOMIZE) {
     const isCartilla =
       !!settings.CARTILLAS_ETDRS[currentMode]      ||
+      !!settings.CARTILLAS_E_TUMBLING[currentMode] ||
       !!settings.CARTILLAS_NUMEROS[currentMode]    ||
       !!settings.CARTILLAS_LEA[currentMode];
     if (isCartilla) {
@@ -630,10 +656,11 @@ const RemoteControl = {
         });
         break;
       case 'randomize': {
-        // Aleatorización manual vía remoto — incluye ETDRS, Números y LEA (clínico #4)
+        // Aleatorización manual vía remoto — incluye ETDRS, Números, LEA y E Tumbling (clínico #4)
         const isCartilla =
           !!settings.CARTILLAS_ETDRS[currentMode]      ||
-          !!settings.CARTILLAS_NUMEROS[currentMode]     ||
+          !!settings.CARTILLAS_E_TUMBLING[currentMode] ||
+          !!settings.CARTILLAS_NUMEROS[currentMode]    ||
           !!settings.CARTILLAS_LEA[currentMode];
         if (isCartilla) {
           sessionLines.delete(sessionKey(currentMode, valorLogMarActual));
@@ -684,9 +711,10 @@ const RemoteControl = {
   setOptotypeByType(type: string): void {
     const { modosDePantalla } = store.state;
     const typeMap: Record<string, string> = {
-      sloan:   'ETDRS',
-      numbers: 'Numeros 1',
-      lea:     'LEA',
+      sloan:    'ETDRS',
+      numbers:  'Numeros 1',
+      lea:      'LEA',
+      tumbling: 'E Tumbling',
     };
     const targetName = typeMap[type];
     if (!targetName) return;

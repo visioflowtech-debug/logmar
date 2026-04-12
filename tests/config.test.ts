@@ -179,7 +179,58 @@ describe('CARTILLAS_NUMEROS — integridad', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 5. Cartillas LEA — integridad
+// 5. Cartillas E Tumbling — integridad de orientaciones (ISO 8597)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('CARTILLAS_E_TUMBLING — integridad de orientaciones', () => {
+  const DIRS_VALIDAS = new Set(['0', '90', '180', '270']);
+
+  for (const [nombre, lineas] of Object.entries(CONFIG.CARTILLAS_E_TUMBLING)) {
+
+    it(`${nombre}: tiene 17 líneas (una por cada valor en POSSIBLE_LOGMAR_VALUES)`, () => {
+      expect(lineas).toHaveLength(17);
+    });
+
+    it(`${nombre}: cada línea tiene exactamente 5 direcciones (estándar ETDRS — 5 optotipos)`, () => {
+      for (const linea of lineas) {
+        expect(parsearLinea(linea)).toHaveLength(5);
+      }
+    });
+
+    it(`${nombre}: solo usa las 4 orientaciones válidas (0°, 90°, 180°, 270°)`, () => {
+      for (const linea of lineas) {
+        for (const dir of parsearLinea(linea)) {
+          expect(DIRS_VALIDAS.has(dir)).toBe(true);
+        }
+      }
+    });
+
+    it(`${nombre}: ninguna línea tiene dos direcciones consecutivas iguales`, () => {
+      for (const linea of lineas) {
+        const dirs = parsearLinea(linea);
+        for (let i = 1; i < dirs.length; i++) {
+          expect(dirs[i]).not.toBe(dirs[i - 1]);
+        }
+      }
+    });
+
+    it(`${nombre}: las 4 orientaciones aparecen al menos una vez en la cartilla`, () => {
+      const encontradas = new Set(lineas.flatMap((l) => parsearLinea(l)));
+      for (const dir of DIRS_VALIDAS) {
+        expect(encontradas.has(dir)).toBe(true);
+      }
+    });
+  }
+
+  it('Existe exactamente 1 cartilla E Tumbling', () => {
+    const keys = Object.keys(CONFIG.CARTILLAS_E_TUMBLING);
+    expect(keys).toHaveLength(1);
+    expect(keys).toContain('E Tumbling');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. Cartillas LEA — integridad
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('CARTILLAS_LEA — integridad de símbolos Hyvärinen', () => {
@@ -215,7 +266,7 @@ describe('CARTILLAS_LEA — integridad de símbolos Hyvärinen', () => {
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 6. Duo-Cromo — configuración
+// 7. Duo-Cromo — configuración
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('Duo-Cromo — configuración', () => {

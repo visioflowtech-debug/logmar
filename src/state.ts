@@ -58,10 +58,11 @@ function buildInitialSettings(): AppSettings {
     duochromeLetterLines:  readInt('duochromeLetterLines',    CONFIG.duochromeLetterLines),
     enabledLogMarValues:   safeJsonParse<number[]>('enabledLogMarValues', [...CONFIG.DEFAULT_ENABLED_LOGMAR]),
     isMirrored:            safeJsonParse<boolean>('isMirrored', false),
-    CARTILLAS_ETDRS:   { ...CONFIG.CARTILLAS_ETDRS },
-    CARTILLAS_NUMEROS: { ...CONFIG.CARTILLAS_NUMEROS },
-    CARTILLAS_LEA:     { ...CONFIG.CARTILLAS_LEA },
-    DUOCHROME_LETTERS: CONFIG.DUOCHROME_LETTERS,
+    CARTILLAS_ETDRS:       { ...CONFIG.CARTILLAS_ETDRS },
+    CARTILLAS_E_TUMBLING:  { ...CONFIG.CARTILLAS_E_TUMBLING },
+    CARTILLAS_NUMEROS:     { ...CONFIG.CARTILLAS_NUMEROS },
+    CARTILLAS_LEA:         { ...CONFIG.CARTILLAS_LEA },
+    DUOCHROME_LETTERS:     CONFIG.DUOCHROME_LETTERS,
   };
 }
 
@@ -70,12 +71,14 @@ function buildInitialState(): AppState {
 
   const modosDePantalla: string[] = [
     ...Object.keys(settings.CARTILLAS_ETDRS),
+    ...Object.keys(settings.CARTILLAS_E_TUMBLING),
     ...Object.keys(settings.CARTILLAS_NUMEROS),
     ...Object.keys(settings.CARTILLAS_LEA),
     'Duo-Cromo',
     'Reloj Astigmático',
     'Test de Worth',
     'Rejilla de Amsler',
+    'Punto de Fijación',
   ];
 
   let valorLogMarActual = settings.valorLogMarInicial;

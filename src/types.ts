@@ -23,6 +23,7 @@ export interface AppSettings extends ScreenConfig {
   duochromeTargetScale: number;
   duochromeLetterLines: number;
   CARTILLAS_ETDRS: Record<string, string[]>;
+  CARTILLAS_E_TUMBLING: Record<string, string[]>;
   CARTILLAS_NUMEROS: Record<string, string[]>;
   CARTILLAS_LEA: Record<string, string[]>;
   DUOCHROME_LETTERS: string;

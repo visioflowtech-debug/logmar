@@ -91,6 +91,34 @@ export const CONFIG = {
     ],
   } as Record<string, string[]>,
 
+  // --- Cartilla E Tumbling (dirección de la E — ISO 8597 / ETDRS) ---
+  // 4 direcciones: 0°(→), 90°(↓), 180°(←), 270°(↑).
+  // El paciente señala con la mano — sin componente cognitivo ni alfabetismo.
+  // Válida para pacientes iletrados, pediátricos y con barrera de idioma.
+  // Las secuencias de datos son solo referencia de formato; el renderizado usa
+  // aleatorización por sesión (main.ts sessionLines) igual que ETDRS.
+  CARTILLAS_E_TUMBLING: {
+    'E Tumbling': [
+      '0 90 180 270 0',   // 1.3
+      '180 270 0 90 180', // 1.2
+      '270 0 90 180 270', // 1.1
+      '90 180 270 0 90',  // 1.0
+      '0 270 90 180 0',   // 0.9
+      '180 90 270 0 180', // 0.8
+      '270 180 0 90 270', // 0.7
+      '90 0 180 270 90',  // 0.6
+      '0 180 270 90 0',   // 0.5
+      '270 90 0 180 270', // 0.4
+      '180 0 90 270 180', // 0.3
+      '90 270 180 0 90',  // 0.2
+      '0 90 270 180 0',   // 0.1
+      '180 270 90 0 180', // 0.0
+      '270 0 180 90 270', // -0.1
+      '90 180 0 270 90',  // -0.2
+      '0 270 180 90 0',   // -0.3
+    ],
+  } as Record<string, string[]>,
+
   DUOCHROME_LETTERS: 'O C',
 
   // --- Cartilla LEA Pediátrica (Hyvärinen) ---
