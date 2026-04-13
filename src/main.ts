@@ -97,41 +97,67 @@ function sessionKey(modo: string, logmar: number): string {
 const LEA_SVG: Record<string, string> = {
   // Manzana (Apple) — contorno hueco, silueta corazón-manzana estándar Hyvärinen
   // Tallo corto centrado (y1=10 y2=28); cuerpo: dos lóbulos redondeados
+  // DISEÑO: Ocupa 0-100 en Y (incluyendo stroke-width=20)
   A: `<svg class="optotype-svg" viewBox="0 0 100 100">
-    <path fill="none" stroke="currentColor" stroke-width="14"
+    <path fill="none" stroke="currentColor" stroke-width="18"
       stroke-linejoin="round" stroke-linecap="round"
-      d="M50,30 C46,24 36,20 28,26 C14,34 12,50 12,60
-         C12,76 22,90 37,90 C43,90 47,86 50,82
-         C53,86 57,90 63,90 C78,90 88,76 88,60
-         C88,50 86,34 72,26 C64,20 54,24 50,30 Z"/>
-    <line stroke="currentColor" stroke-width="10"
-      stroke-linecap="round" x1="50" y1="10" x2="50" y2="28"/>
+      d="M50,32 C45,26 35,22 25,28 C10,38 10,55 10,65
+         C10,81 20,91 35,91 C43,91 47,87 50,83
+         C53,87 57,91 65,91 C80,91 90,81 90,65
+         C90,55 90,38 75,28 C65,22 55,26 50,32 Z"/>
+    <line stroke="currentColor" stroke-width="12"
+      stroke-linecap="round" x1="50" y1="9" x2="50" y2="28"/>
   </svg>`,
   // Casa (House) — contorno hueco con aleros (eaves) estándar Good-Lite
-  // Aleros: techo se extiende x=5..15 (izq) y x=85..95 (der) más allá de paredes
+  // DISEÑO: Ocupa 0-100 en Y e X (incluyendo stroke-width=20)
   H: `<svg class="optotype-svg" viewBox="0 0 100 100">
-    <path fill="none" stroke="currentColor" stroke-width="16"
+    <path fill="none" stroke="currentColor" stroke-width="20"
       stroke-linejoin="round" stroke-linecap="round"
-      d="M5,58 L50,10 L95,58 L85,58 L85,90 L15,90 L15,58 Z"/>
+      d="M10,54 L50,10 L90,54 L82,54 L82,90 L18,90 L18,54 Z"/>
   </svg>`,
-  // Círculo (Circle) — anillo con trazo = 1/5 del diámetro (ISO 8596:2009 sec 4.1)
-  // Diámetro exterior = 80% del viewBox (80 u), stroke-width = 16 u (20%)
+  // Círculo (Circle) — anillo con trazo = 1/5 del diámetro (ISO 8596:2009)
+  // DISEÑO: Ocupa 0-100 en Y e X (incluyendo stroke-width=20) -> Radio central = 40
   C: `<svg class="optotype-svg" viewBox="0 0 100 100">
-    <circle fill="none" stroke="currentColor" stroke-width="16"
-      stroke-linecap="round" cx="50" cy="50" r="32"/>
+    <circle fill="none" stroke="currentColor" stroke-width="20"
+      stroke-linecap="round" cx="50" cy="50" r="40"/>
   </svg>`,
   // Cuadrado (Square) — marco con trazo = 1/5 del lado (ISO 8596:2009)
-  // Lado exterior = 80 u (10→90), stroke centrado en x=18, lado=64
+  // DISEÑO: Ocupa 0-100 en Y e X (incluyendo stroke-width=20) -> Rect central x=10, y=10, w=80
   S: `<svg class="optotype-svg" viewBox="0 0 100 100">
-    <rect fill="none" stroke="currentColor" stroke-width="16"
+    <rect fill="none" stroke="currentColor" stroke-width="20"
       stroke-linejoin="round" stroke-linecap="round"
-      x="18" y="18" width="64" height="64"/>
+      x="10" y="10" width="80" height="80"/>
   </svg>`,
 };
 
-// sizePx se inyecta como style inline en el SVG — más confiable que CSS% en SVGs
-// inyectados via innerHTML dentro de flex/inline-block (comportamiento inconsistente
-// entre navegadores con width/height:100% en ese contexto).
+/**
+ * Mide la altura real del glifo Optician Sans vía Canvas API (sin renderizar en pantalla).
+ *
+ * Problema raíz: el em-square de Optician Sans (= font-size) es mayor que el
+ * cap-height real del glifo. Si usamos font-size directamente para dimensionar SVGs,
+ * los SVGs aparecen más grandes que las letras ETDRS aunque usen el mismo nuevoTamanoPx.
+ *
+ * Canvas.measureText().actualBoundingBoxAscent + actualBBoxDescent = altura real de tinta.
+ * Usar esa medida garantiza que SVG de LEA/E Tumbling coincida visualmente con ETDRS.
+ *
+ * Fallback: retorna fontSizePx si el navegador no soporta actualBoundingBox* (Safari <11.1).
+ */
+function medirAlturaGlifoOS(fontSizePx: number): number {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 2; canvas.height = 2; // tamaño mínimo — measureText no renderiza
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return fontSizePx;
+    ctx.font = `${fontSizePx}px 'OpticianSans', 'Courier New', monospace`;
+    const m = ctx.measureText('H');
+    const h = (m.actualBoundingBoxAscent ?? 0) + (m.actualBoundingBoxDescent ?? 0);
+    return h > 0 ? h : fontSizePx;
+  } catch {
+    return fontSizePx;
+  }
+}
+
+// sizePx se inyecta como style inline en el SVG.
 function renderSymbol(char: string, sizePx: number): string {
   const template = LEA_SVG[char];
   if (!template) return char;
@@ -141,16 +167,17 @@ function renderSymbol(char: string, sizePx: number): string {
   );
 }
 
-// E Tumbling: letra E rotada (ISO 8597 — test para iletrados y pediátricos)
-// Geometría: viewBox 100×100, unidad=16px (1/5 del alto de 80u)
-// Barra vertical: x=10→26, y=10→90 · Travesaños: x=26→90, alto=16u, gaps=16u
+// E Tumbling (ISO 8597) — la E llena el viewBox completo (0→100) sin márgenes.
+// Geometría: 1 MAR = 20u. Barra vertical: x=0–20, y=0–100.
+// Travesaños: x=20–100 (4 MAR), alto=20u, separados por gaps=20u.
+// Patrón: bar(0-20) gap(20-40) bar(40-60) gap(60-80) bar(80-100) = 5 MAR ✓
 function renderETumbling(direction: string, sizePx: number): string {
   return `<svg class="optotype-e-tumbling" viewBox="0 0 100 100"
     style="display:block;width:${sizePx}px;height:${sizePx}px;transform:rotate(${direction}deg)">
-    <rect fill="currentColor" x="10" y="10" width="16" height="80"/>
-    <rect fill="currentColor" x="26" y="10" width="64" height="16"/>
-    <rect fill="currentColor" x="26" y="42" width="64" height="16"/>
-    <rect fill="currentColor" x="26" y="74" width="64" height="16"/>
+    <rect fill="currentColor" x="0"  y="0"  width="20" height="100"/>
+    <rect fill="currentColor" x="20" y="0"  width="80" height="20"/>
+    <rect fill="currentColor" x="20" y="40" width="80" height="20"/>
+    <rect fill="currentColor" x="20" y="80" width="80" height="20"/>
   </svg>`;
 }
 
@@ -351,8 +378,11 @@ function adjustContentScale(): void {
   if (!container) return;
   container.style.transform = 'scale(1)';
   const maxWidth = window.innerWidth * 0.9;
-  if (container.scrollWidth > maxWidth) {
-    container.style.transform = `scale(${maxWidth / container.scrollWidth})`;
+  const scrollW  = container.scrollWidth;
+  let   scale    = 1;
+  if (scrollW > maxWidth) {
+    scale = maxWidth / scrollW;
+    container.style.transform = `scale(${scale})`;
   }
 }
 
@@ -404,11 +434,23 @@ function actualizarPantalla(): void {
   // Modo ETDRS (cartillas de letras, números, LEA)
   if (esModoETDRS && cartillaActiva) {
     etdrsChart.classList.remove('hidden');
-    const nuevoTamanoPx = calcularTamanoLogMAR(valorLogMarActual, settings);
-    etdrsChart.style.fontSize = `${nuevoTamanoPx}px`;
-
+    const nuevoTamanoPx   = calcularTamanoLogMAR(valorLogMarActual, settings);
     const esModoLEA       = !!settings.CARTILLAS_LEA[modoActual];
     const esModoETumbling = !!settings.CARTILLAS_E_TUMBLING[modoActual];
+
+    // Para modos SVG: medir la altura real del glifo Optician Sans (cap-height) y usarla
+    // como tamaño del SVG. Esto garantiza que el círculo LEA o la E Tumbling tengan la misma
+    // altura de tinta que las letras ETDRS, resolviendo la desproporción visual.
+    const visualRefPx = medirAlturaGlifoOS(nuevoTamanoPx);
+
+    etdrsChart.style.fontSize = `${nuevoTamanoPx}px`;
+    console.log(
+      `[render] modo=${modoActual} LogMAR=${valorLogMarActual.toFixed(2)}`,
+      `nuevoTamanoPx (ref)=${nuevoTamanoPx.toFixed(1)}px`,
+      `visualHeight (SVG)=${visualRefPx.toFixed(1)}px`,
+      `ratio=${(visualRefPx / nuevoTamanoPx).toFixed(3)}`
+    );
+
     const lineContent = document.getElementById('etdrs-line-content');
     lineContent?.classList.toggle('lea-mode', esModoLEA);
 
@@ -452,8 +494,8 @@ function actualizarPantalla(): void {
           // dentro de flex/inline-block según el navegador.
           el.style.display = 'inline-block';
           el.innerHTML = esModoLEA
-            ? renderSymbol(char, nuevoTamanoPx)
-            : renderETumbling(char, nuevoTamanoPx);
+            ? renderSymbol(char, visualRefPx)
+            : renderETumbling(char, visualRefPx);
         } else {
           el.style.display = 'inline';
           el.textContent   = char;
