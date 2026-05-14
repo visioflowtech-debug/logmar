@@ -66,6 +66,25 @@ export const CONFIG = {
       'Z H V S K', // -0.2
       'O R K N V', // -0.3
     ],
+    'LogMAR Estandarizada': [
+      'C D H K N', // 1.3 — Sans-Serif, 5 letras, ISO 8596:2009
+      'O R S V Z', // 1.2
+      'K N C D H', // 1.1
+      'R Z O S V', // 1.0
+      'H K D Z N', // 0.9
+      'S V C R O', // 0.8
+      'D O K H Z', // 0.7
+      'N R V C S', // 0.6
+      'Z H O K D', // 0.5
+      'C S R N V', // 0.4
+      'K V Z H O', // 0.3
+      'O D N S C', // 0.2
+      'R H K V Z', // 0.1
+      'V C Z D R', // 0.0
+      'N O H S K', // -0.1
+      'D K R V C', // -0.2
+      'S Z O N H', // -0.3
+    ],
   } as Record<string, string[]>,
 
   // --- Cartilla de Números (5 dígitos por línea, sin repetición) ---

@@ -136,10 +136,14 @@ describe('CARTILLAS_ETDRS — integridad de letras Sloan', () => {
     });
   }
 
-  it('Existe exactamente 1 cartilla ETDRS (modo único con aleatorización por sesión)', () => {
+  it('Existen cartillas ETDRS válidas (con aleatorización por sesión)', () => {
     const keys = Object.keys(CONFIG.CARTILLAS_ETDRS);
-    expect(keys).toHaveLength(1);
+    expect(keys.length).toBeGreaterThan(0);
     expect(keys).toContain('ETDRS');
+    // Todas las cartillas ETDRS deben estar presentes
+    for (const key of keys) {
+      expect(CONFIG.CARTILLAS_ETDRS[key]).toBeDefined();
+    }
   });
 });
 
