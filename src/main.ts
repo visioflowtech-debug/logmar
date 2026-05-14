@@ -157,6 +157,25 @@ function medirAlturaGlifoOS(fontSizePx: number): number {
   }
 }
 
+/**
+ * Medir ancho real de glifo con Canvas API
+ * ISO 8596 estándar: espaciado entre letras = 1 × ancho de letra
+ * Para LogMAR Estandarizada: gap = ancho real de optotipo medido con Canvas
+ */
+function medirAnchoGlifoOS(fontSizePx: number): number {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 2; canvas.height = 2;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return fontSizePx;
+    ctx.font = `${fontSizePx}px 'OpticianSans', 'Courier New', monospace`;
+    const m = ctx.measureText('H');
+    return m.width > 0 ? m.width : fontSizePx;
+  } catch {
+    return fontSizePx;
+  }
+}
+
 // sizePx se inyecta como style inline en el SVG.
 function renderSymbol(char: string, sizePx: number): string {
   const template = LEA_SVG[char];
@@ -213,19 +232,40 @@ function generateRandomLine(length: number, type: LineType): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Cantidad de optotipos por línea
+// Cantidad de optotipos por línea + Escalado para LogMAR Estandarizada
 //
 // ETDRS/Números: exactamente 5 por línea (Ferris 1982 — "Each line contains
 //   5 letters"). Si no caben 5, se muestran los que caben (mínimo 1).
+// LogMAR Estandarizada: SIEMPRE 5 (ISO 8596 estricto). Si no caben, reduce font-size.
 // LEA: hasta 8 (Hyvärinen 1980).
 //
-// Con gap=1em: N optotipos ocupan (2N−1)×letterPx píxeles horizontales.
+// Con gap=ancho: N optotipos ocupan (2N−1)×letterPx píxeles horizontales.
 // ─────────────────────────────────────────────────────────────────────────────
 
 function calcularCantidadOptotipos(letterPx: number, maxOptotipos: number): number {
   const available = window.innerWidth * 0.88;
   const maxFit    = Math.floor((available + letterPx) / (2 * letterPx));
   return Math.max(1, Math.min(maxOptotipos, maxFit));
+}
+
+/**
+ * Para LogMAR Estandarizada: calcular factor de escala si no caben 5 letras
+ * Devuelve el factor por el que multiplicar fontSizePx para que quepan exactamente 5
+ */
+function calcularFactorEscalaLogMAREstándar(letterPx: number, anchoGlifoPx: number): number {
+  // Con gap = ancho de glifo: 5 letras + 4 gaps = 5×letterPx + 4×anchoGlifoPx
+  const totalRequerido = 5 * letterPx + 4 * anchoGlifoPx;
+  const disponible = window.innerWidth * 0.88;
+
+  if (totalRequerido <= disponible) {
+    return 1.0; // Caben 5 letras sin escalar
+  }
+
+  // No caben: calcular escala
+  // Si f es el factor: (5×letterPx×f) + (4×anchoGlifoPx×f) = disponible
+  // f × (5×letterPx + 4×anchoGlifoPx) = disponible
+  // f = disponible / totalRequerido
+  return disponible / totalRequerido;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -434,9 +474,36 @@ function actualizarPantalla(): void {
   // Modo ETDRS (cartillas de letras, números, LEA)
   if (esModoETDRS && cartillaActiva) {
     etdrsChart.classList.remove('hidden');
-    const nuevoTamanoPx   = calcularTamanoLogMAR(valorLogMarActual, settings);
+    let nuevoTamanoPx   = calcularTamanoLogMAR(valorLogMarActual, settings);
     const esModoLEA       = !!settings.CARTILLAS_LEA[modoActual];
     const esModoETumbling = !!settings.CARTILLAS_E_TUMBLING[modoActual];
+    const esLogMAREstándar = modoActual === 'LogMAR Estandarizada';
+
+    // ═════════════════════════════════════════════════════════════════════════════
+    // LogMAR Estandarizada — Validación ISO 8596:2009 estricto
+    // ═════════════════════════════════════════════════════════════════════════════
+    let gapPx = nuevoTamanoPx; // por defecto: gap = altura (1em)
+
+    if (esLogMAREstándar) {
+      // Medir ancho real de glifo Optician-Sans para cumplir ISO 8596
+      // Espaciado entre letras = 1 × ancho de letra (requisito clínico)
+      const anchoGlifoPx = medirAnchoGlifoOS(nuevoTamanoPx);
+
+      // Verificar si caben 5 letras. Si no, escalar hasta que quepan
+      const factorEscala = calcularFactorEscalaLogMAREstándar(nuevoTamanoPx, anchoGlifoPx);
+
+      if (factorEscala < 1.0) {
+        // No caben 5 letras: reducir font-size proporcionalmente
+        nuevoTamanoPx = nuevoTamanoPx * factorEscala;
+        console.warn(
+          `[LogMAR Estándar] Pantalla pequeña: escalando a ${factorEscala.toFixed(2)}x ` +
+          `(${nuevoTamanoPx.toFixed(1)}px) para garantizar 5 letras`
+        );
+      }
+
+      // Recalcular ancho de glifo con el nuevo tamaño
+      gapPx = medirAnchoGlifoOS(nuevoTamanoPx);
+    }
 
     // Para modos SVG: medir la altura real del glifo Optician Sans (cap-height) y usarla
     // como tamaño del SVG. Esto garantiza que el círculo LEA o la E Tumbling tengan la misma
@@ -444,21 +511,29 @@ function actualizarPantalla(): void {
     const visualRefPx = medirAlturaGlifoOS(nuevoTamanoPx);
 
     etdrsChart.style.fontSize = `${nuevoTamanoPx}px`;
+
+    // Aplicar gap dinámico (importante para LogMAR Estandarizada)
+    const lineContent = document.getElementById('etdrs-line-content');
+    if (lineContent) {
+      lineContent.style.gap = `${gapPx}px`;
+    }
+
     console.log(
       `[render] modo=${modoActual} LogMAR=${valorLogMarActual.toFixed(2)}`,
-      `nuevoTamanoPx (ref)=${nuevoTamanoPx.toFixed(1)}px`,
+      `nuevoTamanoPx=${nuevoTamanoPx.toFixed(1)}px`,
+      `gap=${gapPx.toFixed(1)}px`,
       `visualHeight (SVG)=${visualRefPx.toFixed(1)}px`,
       `ratio=${(visualRefPx / nuevoTamanoPx).toFixed(3)}`
     );
 
-    const lineContent = document.getElementById('etdrs-line-content');
     lineContent?.classList.toggle('lea-mode', esModoLEA);
 
     // Cantidad de optotipos:
+    //   LogMAR Estandarizada → SIEMPRE 5 (ISO 8596 estricto)
     //   ETDRS/Números/E Tumbling → máx 5 (estándar Ferris 1982)
     //   LEA → máx 8 (Hyvärinen 1980)
-    const maxOptotipos = esModoLEA ? 8 : 5;
-    const count = calcularCantidadOptotipos(nuevoTamanoPx, maxOptotipos);
+    const maxOptotipos = esModoLEA ? 8 : (esLogMAREstándar ? 5 : 5);
+    const count = esLogMAREstándar ? 5 : calcularCantidadOptotipos(nuevoTamanoPx, maxOptotipos);
 
     // Aleatorización por sesión — previene memorización (Bailey & Lovie 1976).
     // Se genera una vez al cargar la página y se mantiene fija hasta R.
