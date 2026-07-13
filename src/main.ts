@@ -220,8 +220,8 @@ function generateRandomLine(length: number, type: LineType): string {
     return shuffled.slice(0, length).join(' ');
   }
 
-  // LEA: length > source.length → con reemplazo, pero sin consecutivos.
-  // Previene "A A H C" que desorientan al paciente pediátrico.
+  // LEA: length > source.length (5 símbolos de un set de 4) → con reemplazo,
+  // pero sin consecutivos. Previene "A A H C" que desorientan al paciente pediátrico.
   const result: string[] = [];
   for (let i = 0; i < length; i++) {
     const last    = result[result.length - 1];
@@ -237,7 +237,7 @@ function generateRandomLine(length: number, type: LineType): string {
 // ETDRS/Números: exactamente 5 por línea (Ferris 1982 — "Each line contains
 //   5 letters"). Si no caben 5, se muestran los que caben (mínimo 1).
 // LogMAR Estandarizada: SIEMPRE 5 (ISO 8596 estricto). Si no caben, reduce font-size.
-// LEA: hasta 8 (Hyvärinen 1980).
+// LEA: SIEMPRE 5 (formato proporcional Hyvärinen / ISO 8596). Si no caben, reduce font-size.
 //
 // Con gap=ancho: N optotipos ocupan (2N−1)×letterPx píxeles horizontales.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -505,6 +505,32 @@ function actualizarPantalla(): void {
       gapPx = medirAnchoGlifoOS(nuevoTamanoPx);
     }
 
+    // ═════════════════════════════════════════════════════════════════════════════
+    // LEA Pediátrica — mismo estándar que LogMAR Estandarizada (ISO 8596:2009)
+    //   - SIEMPRE 5 símbolos por línea
+    //   - Espaciado entre símbolos = 1 × ancho de símbolo (SVG cuadrado: ancho = lado)
+    //   - Si no caben 5, se reduce el tamaño proporcionalmente (nunca se quitan símbolos)
+    // ═════════════════════════════════════════════════════════════════════════════
+    if (esModoLEA) {
+      // El símbolo LEA es un SVG cuadrado de lado = cap-height del glifo Optician Sans.
+      // Con gap = ancho de símbolo: 5 símbolos + 4 gaps = 9 × lado.
+      const ladoSimboloPx  = medirAlturaGlifoOS(nuevoTamanoPx);
+      const totalRequerido = 9 * ladoSimboloPx;
+      const disponible     = window.innerWidth * 0.88;
+
+      if (totalRequerido > disponible) {
+        const factorEscala = disponible / totalRequerido;
+        nuevoTamanoPx = nuevoTamanoPx * factorEscala;
+        console.warn(
+          `[LEA Pediátrica] Pantalla pequeña: escalando a ${factorEscala.toFixed(2)}x ` +
+          `(${nuevoTamanoPx.toFixed(1)}px) para garantizar 5 símbolos`
+        );
+      }
+
+      // Gap = ancho real del símbolo renderizado (recalculado tras posible escala)
+      gapPx = medirAlturaGlifoOS(nuevoTamanoPx);
+    }
+
     // Para modos SVG: medir la altura real del glifo Optician Sans (cap-height) y usarla
     // como tamaño del SVG. Esto garantiza que el círculo LEA o la E Tumbling tengan la misma
     // altura de tinta que las letras ETDRS, resolviendo la desproporción visual.
@@ -526,14 +552,13 @@ function actualizarPantalla(): void {
       `ratio=${(visualRefPx / nuevoTamanoPx).toFixed(3)}`
     );
 
-    lineContent?.classList.toggle('lea-mode', esModoLEA);
-
     // Cantidad de optotipos:
-    //   LogMAR Estandarizada → SIEMPRE 5 (ISO 8596 estricto)
+    //   LogMAR Estandarizada / LEA → SIEMPRE 5 (ISO 8596 estricto; el escalado
+    //     previo garantiza que caben)
     //   ETDRS/Números/E Tumbling → máx 5 (estándar Ferris 1982)
-    //   LEA → máx 8 (Hyvärinen 1980)
-    const maxOptotipos = esModoLEA ? 8 : (esLogMAREstándar ? 5 : 5);
-    const count = esLogMAREstándar ? 5 : calcularCantidadOptotipos(nuevoTamanoPx, maxOptotipos);
+    const count = (esLogMAREstándar || esModoLEA)
+      ? 5
+      : calcularCantidadOptotipos(nuevoTamanoPx, 5);
 
     // Aleatorización por sesión — previene memorización (Bailey & Lovie 1976).
     // Se genera una vez al cargar la página y se mantiene fija hasta R.
@@ -544,8 +569,7 @@ function actualizarPantalla(): void {
       else if (esModoETumbling)                          tipo = 'TUMBLING';
       else if (!!settings.CARTILLAS_NUMEROS[modoActual]) tipo = 'NUMBERS';
       else                                               tipo = 'LETTERS';
-      const len = esModoLEA ? 8 : 5;
-      sessionLines.set(key, generateRandomLine(len, tipo));
+      sessionLines.set(key, generateRandomLine(5, tipo));
     }
     const lineText = sessionLines.get(key)!;
 

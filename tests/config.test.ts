@@ -245,9 +245,18 @@ describe('CARTILLAS_LEA — integridad de símbolos Hyvärinen', () => {
       expect(lineas).toHaveLength(10);
     });
 
-    it(`${nombre}: cada línea tiene 8 símbolos`, () => {
+    it(`${nombre}: cada línea tiene 5 símbolos (formato proporcional ISO 8596)`, () => {
       for (const linea of lineas) {
-        expect(parsearLinea(linea)).toHaveLength(8);
+        expect(parsearLinea(linea)).toHaveLength(5);
+      }
+    });
+
+    it(`${nombre}: sin símbolos repetidos en posiciones consecutivas`, () => {
+      for (const linea of lineas) {
+        const simbolos = parsearLinea(linea);
+        for (let i = 1; i < simbolos.length; i++) {
+          expect(simbolos[i]).not.toBe(simbolos[i - 1]);
+        }
       }
     });
 

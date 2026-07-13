@@ -472,11 +472,9 @@ body.mirrored {
     fill: currentColor;
 }
 
-/* ISO: espaciado entre optotipos = 1 tamaño de optotipo (Levi 2008 — crowding en ambliopía).
- * gap:1em es relativo al font-size de #etdrs-chart (div normal) → herencia confiable. */
-#etdrs-line-content.lea-mode {
-    gap: 1em;
-}
+/* ISO: espaciado entre optotipos = 1 ancho de optotipo (Levi 2008 — crowding en ambliopía).
+ * El gap de LEA se calcula en JS (ancho real del símbolo) y se aplica inline en
+ * #etdrs-line-content — ver actualizarPantalla() en main.ts. */
 
 /* --- E TUMBLING (ISO 8597) --- */
 /* transform-box:fill-box garantiza que transform-origin:center sea relativo al propio SVG */

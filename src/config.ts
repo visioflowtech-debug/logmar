@@ -144,11 +144,24 @@ export const CONFIG = {
   // Único test pediátrico estándar de la app. Las Figuras de Allen (Lighthouse)
   // fueron eliminadas en v1.5 — reemplazadas por LEA Symbols desde la
   // publicación de Hyvärinen (1976) como estándar internacional (AAO, AOA, ICO).
+  //
+  // Formato proporcional (ISO 8596:2009, igual que LogMAR Estandarizada):
+  //   - 5 símbolos por línea, espaciado entre símbolos = 1 ancho de símbolo
+  //   - Set de 4 símbolos (A H C S) → 1 símbolo se repite por línea,
+  //     nunca en posiciones consecutivas
+  //   - La variabilidad entre sesiones la provee la aleatorización (main.ts)
   CARTILLAS_LEA: {
     'LEA Pediátrica 1': [
-      'A H C S H A S C', 'C S A H C S A H', 'H A S C S H C A', 'S C H A A S H C',
-      'A H S C C A S H', 'H S C A S H A C', 'C A S H H C A S', 'S H A C A S C H',
-      'A C S H C H S A', 'H S A C S A H C',
+      'A H C S A', // los 4 símbolos presentes; repetido no consecutivo
+      'C S H A C',
+      'H A S C H',
+      'S C A H S',
+      'A S H C A',
+      'H C S A H',
+      'C A H S C',
+      'S H C A S',
+      'A C S H A',
+      'H S A C H',
     ],
   } as Record<string, string[]>,
 
