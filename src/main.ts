@@ -161,22 +161,37 @@ function medirAlturaGlifoOS(fontSizePx: number): number {
 }
 
 /**
- * Medir ancho real de glifo con Canvas API
- * ISO 8596 estándar: espaciado entre letras = 1 × ancho de letra
- * Para cartillas estandarizadas: gap = ancho real de optotipo medido con Canvas.
- * `sampleChar`: 'H' para letras Sloan, '0' para dígitos (ancho representativo del set).
+ * Métricas reales del glifo con Canvas API.
+ * ISO 8596 / Ferris 1982: el espacio EN BLANCO entre letras = 1 × ancho de letra.
+ *
+ * - `ancho`: ancho de TINTA del glifo (actualBoundingBoxLeft + Right) — el
+ *   "ancho de letra" al que se refiere la norma.
+ * - `avance`: advance width (incluye side bearings de la fuente) — lo que el
+ *   <span> ocupa realmente en el layout.
+ *
+ * Como los spans se separan por `avance` + gap CSS, para que el blanco VISIBLE
+ * (tinta a tinta) sea exactamente 1 ancho de letra el gap CSS debe compensar
+ * los side bearings: gap = ancho − (avance − ancho) = 2×ancho − avance.
+ *
+ * `sampleChar`: 'H' para letras Sloan, '0' para dígitos (representativo del set).
+ * Fallback: ancho = avance (= width) si el navegador no soporta actualBoundingBox*.
  */
-function medirAnchoGlifoOS(fontSizePx: number, sampleChar: string = 'H'): number {
+function medirGlifoOS(
+  fontSizePx: number,
+  sampleChar: string = 'H',
+): { ancho: number; avance: number } {
   try {
     const canvas = document.createElement('canvas');
     canvas.width = 2; canvas.height = 2;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return fontSizePx;
+    if (!ctx) return { ancho: fontSizePx, avance: fontSizePx };
     ctx.font = `${fontSizePx}px 'OpticianSans', 'Courier New', monospace`;
     const m = ctx.measureText(sampleChar);
-    return m.width > 0 ? m.width : fontSizePx;
+    const avance = m.width > 0 ? m.width : fontSizePx;
+    const tinta  = (m.actualBoundingBoxLeft ?? 0) + (m.actualBoundingBoxRight ?? 0);
+    return { ancho: tinta > 0 ? tinta : avance, avance };
   } catch {
-    return fontSizePx;
+    return { ancho: fontSizePx, avance: fontSizePx };
   }
 }
 
@@ -263,11 +278,12 @@ function calcularCantidadOptotipos(letterPx: number, maxOptotipos: number): numb
  * la propia ISO 8596 admite menos optotipos por línea en los niveles de agudeza
  * baja (optotipos grandes). El HUD muestra el criterio de paso según la cantidad real.
  *
- * n optotipos de ancho A con gap G ocupan: n×A + (n−1)×G.
+ * n elementos de ancho de layout A (advance width para texto, lado para SVG)
+ * con gap CSS G ocupan: n×A + (n−1)×G.
  */
-function cuantosCabenTamanoExacto(anchoOptotipoPx: number, gapPx: number): number {
+function cuantosCabenTamanoExacto(anchoElementoPx: number, gapPx: number): number {
   const disponible = window.innerWidth * 0.88;
-  const n = Math.floor((disponible + gapPx) / (anchoOptotipoPx + gapPx));
+  const n = Math.floor((disponible + gapPx) / (anchoElementoPx + gapPx));
   return Math.max(1, n);
 }
 
@@ -501,20 +517,22 @@ function actualizarPantalla(): void {
     let maxCabenExacto: number | null = null; // solo modos estandarizados
 
     if (esLogMAREstándar || esModoNumeros) {
-      // Ancho real de glifo Optician-Sans para cumplir ISO 8596.
-      // 'H' es representativo del set Sloan; '0' del set de dígitos.
-      const anchoGlifoPx = medirAnchoGlifoOS(nuevoTamanoPx, esModoNumeros ? '0' : 'H');
-      gapPx          = anchoGlifoPx;
-      maxCabenExacto = cuantosCabenTamanoExacto(anchoGlifoPx, anchoGlifoPx);
+      // Blanco visible entre optotipos = 1 × ancho de tinta del glifo (ISO 8596).
+      // El gap CSS compensa los side bearings de la fuente (ver medirGlifoOS).
+      const { ancho, avance } = medirGlifoOS(nuevoTamanoPx, esModoNumeros ? '0' : 'H');
+      gapPx          = Math.max(0, 2 * ancho - avance);
+      maxCabenExacto = cuantosCabenTamanoExacto(avance, gapPx);
     } else if (esModoLEA) {
-      // El símbolo LEA es un SVG cuadrado de lado = cap-height del glifo.
+      // El símbolo LEA es un SVG cuadrado de lado = cap-height del glifo,
+      // sin side bearings: gap = lado del símbolo directamente.
       const ladoSimboloPx = medirAlturaGlifoOS(nuevoTamanoPx);
       gapPx          = ladoSimboloPx;
       maxCabenExacto = cuantosCabenTamanoExacto(ladoSimboloPx, ladoSimboloPx);
     } else if (!esModoETumbling) {
       // ETDRS clásico: mismo espaciado ISO que la Estandarizada (1 ancho real
       // de letra, no 1em) — Ferris 1982: "letter spacing = one letter width".
-      gapPx = medirAnchoGlifoOS(nuevoTamanoPx, 'H');
+      const { ancho, avance } = medirGlifoOS(nuevoTamanoPx, 'H');
+      gapPx = Math.max(0, 2 * ancho - avance);
     }
 
     // Para modos SVG: medir la altura real del glifo Optician Sans (cap-height) y usarla
