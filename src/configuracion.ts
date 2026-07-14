@@ -7,6 +7,7 @@
 
 import { CONFIG } from './config';
 import { calcularTamanoLogMAR } from './chart_logic';
+import { construirTodosLosModos, leerModosOcultos } from './state';
 
 document.addEventListener('DOMContentLoaded', () => {
   // --- Referencias al DOM ---
@@ -23,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const calibrationFactor      = document.getElementById('calibrationFactor')      as HTMLInputElement;
   const referenceList          = document.getElementById('reference-list')!;
   const logmarCheckboxesContainer = document.getElementById('logmar-checkboxes')!;
+  const modosCheckboxesContainer  = document.getElementById('modos-checkboxes')!;
 
   // --- Referencias a las nuevas herramientas de calibración ---
   const letterPreviewBox   = document.getElementById('letter-preview-box') as HTMLElement;
@@ -161,6 +163,42 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // --- Checkboxes de cartillas/tests visibles ---
+  // Marcado = visible en la pantalla principal. Se persiste la lista de
+  // OCULTOS en 'hiddenModes' (ver leerModosOcultos en state.ts).
+  function loadModoCheckboxes(): void {
+    const ocultos = new Set(leerModosOcultos());
+
+    modosCheckboxesContainer.innerHTML = '';
+    construirTodosLosModos().forEach((modo, i) => {
+      const wrapper  = document.createElement('div');
+      const checkbox = document.createElement('input');
+      checkbox.type    = 'checkbox';
+      checkbox.value   = modo;
+      checkbox.id      = `cb-modo-${i}`;
+      checkbox.checked = !ocultos.has(modo);
+
+      const label = document.createElement('label');
+      label.htmlFor     = `cb-modo-${i}`;
+      label.textContent = modo;
+      label.style.marginLeft = '5px';
+
+      wrapper.appendChild(checkbox);
+      wrapper.appendChild(label);
+      modosCheckboxesContainer.appendChild(wrapper);
+    });
+  }
+
+  function getModosOcultosSeleccionados(): { ocultos: string[]; visibles: number } {
+    const checkboxes = modosCheckboxesContainer.querySelectorAll<HTMLInputElement>(
+      'input[type="checkbox"]',
+    );
+    const ocultos = Array.from(checkboxes)
+      .filter((cb) => !cb.checked)
+      .map((cb) => cb.value);
+    return { ocultos, visibles: checkboxes.length - ocultos.length };
+  }
+
   function getEnabledLogMarValues(): number[] {
     const checkboxes = logmarCheckboxesContainer.querySelectorAll<HTMLInputElement>(
       'input[type="checkbox"]',
@@ -212,6 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
     duochromeLetterLines.value   = localStorage.getItem('duochromeLetterLines')   ?? String(CONFIG.duochromeLetterLines);
     calibrationFactor.value      = localStorage.getItem('calibrationFactor')      ?? String(CONFIG.calibrationFactor);
     loadLogMarCheckboxes();
+    loadModoCheckboxes();
     updateReferenceTable();
     renderHiDPIHint();
     updateLivePreview();
@@ -236,6 +275,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       localStorage.setItem('enabledLogMarValues', JSON.stringify(enabledLines));
+
+      const { ocultos, visibles } = getModosOcultosSeleccionados();
+      if (visibles === 0) {
+        alert('¡Debes dejar visible al menos una cartilla o test!');
+        return;
+      }
+      localStorage.setItem('hiddenModes', JSON.stringify(ocultos));
 
       statusMsg.textContent = '¡Guardado con éxito!';
       statusMsg.style.color = 'green';

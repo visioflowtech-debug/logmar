@@ -42,6 +42,42 @@ function readInt(key: string, fallback: number): number {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Modos de pantalla disponibles
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Tests estáticos que no provienen de cartillas de optotipos */
+const MODOS_FIJOS = [
+  'Duo-Cromo',
+  'Reloj Astigmático',
+  'Test de Worth',
+  'Rejilla de Amsler',
+  'Punto de Fijación',
+];
+
+/**
+ * Listado completo de modos de la app (cartillas + tests fijos), sin filtrar.
+ * Fuente única para la pantalla principal y para los checkboxes de configuración.
+ */
+export function construirTodosLosModos(): string[] {
+  return [
+    ...Object.keys(CONFIG.CARTILLAS_ETDRS),
+    ...Object.keys(CONFIG.CARTILLAS_E_TUMBLING),
+    ...Object.keys(CONFIG.CARTILLAS_NUMEROS),
+    ...Object.keys(CONFIG.CARTILLAS_LEA),
+    ...MODOS_FIJOS,
+  ];
+}
+
+/**
+ * Modos ocultos por el usuario (configuración → "Cartillas y Tests Visibles").
+ * Se persiste la lista de OCULTOS (no la de visibles) para que cualquier
+ * cartilla nueva agregada en versiones futuras aparezca visible por defecto.
+ */
+export function leerModosOcultos(): string[] {
+  return safeJsonParse<string[]>('hiddenModes', []);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Construcción del estado inicial
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -69,17 +105,13 @@ function buildInitialSettings(): AppSettings {
 function buildInitialState(): AppState {
   const settings = buildInitialSettings();
 
-  const modosDePantalla: string[] = [
-    ...Object.keys(settings.CARTILLAS_ETDRS),
-    ...Object.keys(settings.CARTILLAS_E_TUMBLING),
-    ...Object.keys(settings.CARTILLAS_NUMEROS),
-    ...Object.keys(settings.CARTILLAS_LEA),
-    'Duo-Cromo',
-    'Reloj Astigmático',
-    'Test de Worth',
-    'Rejilla de Amsler',
-    'Punto de Fijación',
-  ];
+  // Filtrar los modos que el usuario ocultó en configuración.
+  // Si el filtro dejara la lista vacía, se ignora (la navegación cíclica
+  // por índice requiere al menos un modo).
+  const todosLosModos = construirTodosLosModos();
+  const ocultos       = new Set(leerModosOcultos());
+  let modosDePantalla = todosLosModos.filter((m) => !ocultos.has(m));
+  if (modosDePantalla.length === 0) modosDePantalla = todosLosModos;
 
   let valorLogMarActual = settings.valorLogMarInicial;
   if (!settings.enabledLogMarValues.includes(valorLogMarActual)) {
