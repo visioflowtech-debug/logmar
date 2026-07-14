@@ -79,9 +79,12 @@ function sessionKey(modo: string, logmar: number): string {
 // ─────────────────────────────────────────────────────────────────────────────
 // SVG — Símbolos LEA (Hyvärinen 1980 / ISO 8596:2009)
 //
-// IMPORTANTE CLÍNICO: Los símbolos deben ser SÓLIDOS (silueta negra rellena).
-// La versión hollow (contorno) reduce el fenómeno de crowding y sobreestima
-// la agudeza visual en pacientes con ambliopía — invalida el screening.
+// NOTA CLÍNICA (decisión vigente, validación 2026-07-13): los símbolos se
+// renderizan como CONTORNO HUECO por decisión del propietario clínico.
+// El estándar Hyvärinen original usa siluetas SÓLIDAS; la versión de contorno
+// puede reducir el crowding intrínseco y sobreestimar la agudeza en ambliopía.
+// Interpretar el screening pediátrico con cautela mientras se mantenga esta
+// variante (ver hallazgo mayor #1 del informe de validación clínica).
 // Fuente: Levi DM. Vision Research. 2008;48(5):635-654.
 //         Hyvärinen L. Acta Ophthalmol Scand Suppl. 1996;(219):50-52.
 //
@@ -160,16 +163,17 @@ function medirAlturaGlifoOS(fontSizePx: number): number {
 /**
  * Medir ancho real de glifo con Canvas API
  * ISO 8596 estándar: espaciado entre letras = 1 × ancho de letra
- * Para LogMAR Estandarizada: gap = ancho real de optotipo medido con Canvas
+ * Para cartillas estandarizadas: gap = ancho real de optotipo medido con Canvas.
+ * `sampleChar`: 'H' para letras Sloan, '0' para dígitos (ancho representativo del set).
  */
-function medirAnchoGlifoOS(fontSizePx: number): number {
+function medirAnchoGlifoOS(fontSizePx: number, sampleChar: string = 'H'): number {
   try {
     const canvas = document.createElement('canvas');
     canvas.width = 2; canvas.height = 2;
     const ctx = canvas.getContext('2d');
     if (!ctx) return fontSizePx;
     ctx.font = `${fontSizePx}px 'OpticianSans', 'Courier New', monospace`;
-    const m = ctx.measureText('H');
+    const m = ctx.measureText(sampleChar);
     return m.width > 0 ? m.width : fontSizePx;
   } catch {
     return fontSizePx;
@@ -234,10 +238,13 @@ function generateRandomLine(length: number, type: LineType): string {
 // ─────────────────────────────────────────────────────────────────────────────
 // Cantidad de optotipos por línea + Escalado para LogMAR Estandarizada
 //
-// ETDRS/Números: exactamente 5 por línea (Ferris 1982 — "Each line contains
-//   5 letters"). Si no caben 5, se muestran los que caben (mínimo 1).
-// LogMAR Estandarizada: SIEMPRE 5 (ISO 8596 estricto). Si no caben, reduce font-size.
-// LEA: SIEMPRE 5 (formato proporcional Hyvärinen / ISO 8596). Si no caben, reduce font-size.
+// REGLA CLÍNICA GLOBAL: el tamaño angular del optotipo ES la medida de agudeza
+// y nunca se altera para que quepan más optotipos. Si no caben 5 al tamaño
+// exacto, se muestran menos (mínimo 1) — ISO 8596 lo admite en niveles de
+// agudeza baja, y el HUD ajusta el criterio de paso a la cantidad real.
+//
+// ETDRS/E Tumbling: máx 5 por línea (Ferris 1982), gap = 1em.
+// LogMAR Estandarizada / Números / LEA: máx 5, gap = 1 ancho de optotipo (ISO 8596).
 //
 // Con gap=ancho: N optotipos ocupan (2N−1)×letterPx píxeles horizontales.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -249,23 +256,19 @@ function calcularCantidadOptotipos(letterPx: number, maxOptotipos: number): numb
 }
 
 /**
- * Para LogMAR Estandarizada: calcular factor de escala si no caben 5 letras
- * Devuelve el factor por el que multiplicar fontSizePx para que quepan exactamente 5
+ * Cuántos optotipos caben al TAMAÑO EXACTO con el gap dado, sin alterar el tamaño.
+ *
+ * EXACTITUD CLÍNICA (ISO 8596:2009): el tamaño angular del optotipo es la medida
+ * y NUNCA se escala para que quepan más. Si no caben 5, se muestran menos —
+ * la propia ISO 8596 admite menos optotipos por línea en los niveles de agudeza
+ * baja (optotipos grandes). El HUD muestra el criterio de paso según la cantidad real.
+ *
+ * n optotipos de ancho A con gap G ocupan: n×A + (n−1)×G.
  */
-function calcularFactorEscalaLogMAREstándar(letterPx: number, anchoGlifoPx: number): number {
-  // Con gap = ancho de glifo: 5 letras + 4 gaps = 5×letterPx + 4×anchoGlifoPx
-  const totalRequerido = 5 * letterPx + 4 * anchoGlifoPx;
+function cuantosCabenTamanoExacto(anchoOptotipoPx: number, gapPx: number): number {
   const disponible = window.innerWidth * 0.88;
-
-  if (totalRequerido <= disponible) {
-    return 1.0; // Caben 5 letras sin escalar
-  }
-
-  // No caben: calcular escala
-  // Si f es el factor: (5×letterPx×f) + (4×anchoGlifoPx×f) = disponible
-  // f × (5×letterPx + 4×anchoGlifoPx) = disponible
-  // f = disponible / totalRequerido
-  return disponible / totalRequerido;
+  const n = Math.floor((disponible + gapPx) / (anchoOptotipoPx + gapPx));
+  return Math.max(1, n);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -375,7 +378,7 @@ function renderDuochrome(): void {
 
 // Avisos clínicos por modo (clínico #4, #5, #6)
 const MODE_HINTS: Record<string, string> = {
-  'Duo-Cromo':         'Requiere filtros rojo-verde · Preguntar en cuál lado las letras se ven más nítidas',
+  'Duo-Cromo':         'Requiere filtros rojo-verde · Preguntar en cuál lado las letras se ven más nítidas · En pantalla LCD la separación cromática es menor que con filtro clásico: resultado orientativo',
   'Test de Worth':     'Paciente usa gafas rojo-verde · OD = filtro rojo, OI = filtro verde',
   'Rejilla de Amsler': 'Distancia: 30 cm · Tape el ojo no dominante · Fijar vista en el punto central',
   'E Tumbling':        'Paciente señala la dirección de la "E" con la mano · 4 orientaciones posibles',
@@ -410,19 +413,25 @@ function updateHud(modoActual: string, optotiposCount?: number): void {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Escala de contenido (evita overflow horizontal)
+// Verificación de overflow horizontal
+//
+// EXACTITUD CLÍNICA: la línea de optotipos NUNCA se escala — un scale < 1
+// alteraría el tamaño angular calibrado e invalidaría la medición (ISO 8596).
+// El responsable de que la línea quepa es el conteo de optotipos
+// (cuantosCabenTamanoExacto / calcularCantidadOptotipos). Si aun así desborda
+// es un bug de conteo: se advierte en consola y se preserva el tamaño — un
+// recorte lateral es visible para el examinador, un tamaño falso no.
 // ─────────────────────────────────────────────────────────────────────────────
 
 function adjustContentScale(): void {
   const container = document.getElementById('etdrs-line-content');
   if (!container) return;
-  container.style.transform = 'scale(1)';
-  const maxWidth = window.innerWidth * 0.9;
-  const scrollW  = container.scrollWidth;
-  let   scale    = 1;
-  if (scrollW > maxWidth) {
-    scale = maxWidth / scrollW;
-    container.style.transform = `scale(${scale})`;
+  container.style.transform = '';
+  if (container.scrollWidth > window.innerWidth) {
+    console.warn(
+      `[render] La línea desborda la pantalla (${container.scrollWidth}px > ` +
+      `${window.innerWidth}px); se preserva el tamaño angular (ISO 8596) — revisar conteo`
+    );
   }
 }
 
@@ -474,61 +483,38 @@ function actualizarPantalla(): void {
   // Modo ETDRS (cartillas de letras, números, LEA)
   if (esModoETDRS && cartillaActiva) {
     etdrsChart.classList.remove('hidden');
-    let nuevoTamanoPx   = calcularTamanoLogMAR(valorLogMarActual, settings);
+    // EXACTITUD CLÍNICA: nuevoTamanoPx sale de la fórmula LogMAR y NUNCA se
+    // modifica. Si los optotipos no caben, se reduce la cantidad, no el tamaño.
+    const nuevoTamanoPx = calcularTamanoLogMAR(valorLogMarActual, settings);
     const esModoLEA       = !!settings.CARTILLAS_LEA[modoActual];
     const esModoETumbling = !!settings.CARTILLAS_E_TUMBLING[modoActual];
+    const esModoNumeros   = !!settings.CARTILLAS_NUMEROS[modoActual];
     const esLogMAREstándar = modoActual === 'LogMAR Estandarizada';
 
     // ═════════════════════════════════════════════════════════════════════════════
-    // LogMAR Estandarizada — Validación ISO 8596:2009 estricto
+    // Validación ISO 8596:2009 — LogMAR Estandarizada, Números y LEA
+    //   - Espaciado entre optotipos = 1 × ancho de optotipo (medido con Canvas)
+    //   - El tamaño angular NUNCA se altera: si no caben 5 al tamaño exacto,
+    //     se muestran menos (ISO 8596 lo admite en niveles de agudeza baja)
     // ═════════════════════════════════════════════════════════════════════════════
-    let gapPx = nuevoTamanoPx; // por defecto: gap = altura (1em)
+    let gapPx = nuevoTamanoPx;          // por defecto: gap = altura (1em)
+    let maxCabenExacto: number | null = null; // solo modos estandarizados
 
-    if (esLogMAREstándar) {
-      // Medir ancho real de glifo Optician-Sans para cumplir ISO 8596
-      // Espaciado entre letras = 1 × ancho de letra (requisito clínico)
-      const anchoGlifoPx = medirAnchoGlifoOS(nuevoTamanoPx);
-
-      // Verificar si caben 5 letras. Si no, escalar hasta que quepan
-      const factorEscala = calcularFactorEscalaLogMAREstándar(nuevoTamanoPx, anchoGlifoPx);
-
-      if (factorEscala < 1.0) {
-        // No caben 5 letras: reducir font-size proporcionalmente
-        nuevoTamanoPx = nuevoTamanoPx * factorEscala;
-        console.warn(
-          `[LogMAR Estándar] Pantalla pequeña: escalando a ${factorEscala.toFixed(2)}x ` +
-          `(${nuevoTamanoPx.toFixed(1)}px) para garantizar 5 letras`
-        );
-      }
-
-      // Recalcular ancho de glifo con el nuevo tamaño
-      gapPx = medirAnchoGlifoOS(nuevoTamanoPx);
-    }
-
-    // ═════════════════════════════════════════════════════════════════════════════
-    // LEA Pediátrica — mismo estándar que LogMAR Estandarizada (ISO 8596:2009)
-    //   - SIEMPRE 5 símbolos por línea
-    //   - Espaciado entre símbolos = 1 × ancho de símbolo (SVG cuadrado: ancho = lado)
-    //   - Si no caben 5, se reduce el tamaño proporcionalmente (nunca se quitan símbolos)
-    // ═════════════════════════════════════════════════════════════════════════════
-    if (esModoLEA) {
-      // El símbolo LEA es un SVG cuadrado de lado = cap-height del glifo Optician Sans.
-      // Con gap = ancho de símbolo: 5 símbolos + 4 gaps = 9 × lado.
-      const ladoSimboloPx  = medirAlturaGlifoOS(nuevoTamanoPx);
-      const totalRequerido = 9 * ladoSimboloPx;
-      const disponible     = window.innerWidth * 0.88;
-
-      if (totalRequerido > disponible) {
-        const factorEscala = disponible / totalRequerido;
-        nuevoTamanoPx = nuevoTamanoPx * factorEscala;
-        console.warn(
-          `[LEA Pediátrica] Pantalla pequeña: escalando a ${factorEscala.toFixed(2)}x ` +
-          `(${nuevoTamanoPx.toFixed(1)}px) para garantizar 5 símbolos`
-        );
-      }
-
-      // Gap = ancho real del símbolo renderizado (recalculado tras posible escala)
-      gapPx = medirAlturaGlifoOS(nuevoTamanoPx);
+    if (esLogMAREstándar || esModoNumeros) {
+      // Ancho real de glifo Optician-Sans para cumplir ISO 8596.
+      // 'H' es representativo del set Sloan; '0' del set de dígitos.
+      const anchoGlifoPx = medirAnchoGlifoOS(nuevoTamanoPx, esModoNumeros ? '0' : 'H');
+      gapPx          = anchoGlifoPx;
+      maxCabenExacto = cuantosCabenTamanoExacto(anchoGlifoPx, anchoGlifoPx);
+    } else if (esModoLEA) {
+      // El símbolo LEA es un SVG cuadrado de lado = cap-height del glifo.
+      const ladoSimboloPx = medirAlturaGlifoOS(nuevoTamanoPx);
+      gapPx          = ladoSimboloPx;
+      maxCabenExacto = cuantosCabenTamanoExacto(ladoSimboloPx, ladoSimboloPx);
+    } else if (!esModoETumbling) {
+      // ETDRS clásico: mismo espaciado ISO que la Estandarizada (1 ancho real
+      // de letra, no 1em) — Ferris 1982: "letter spacing = one letter width".
+      gapPx = medirAnchoGlifoOS(nuevoTamanoPx, 'H');
     }
 
     // Para modos SVG: medir la altura real del glifo Optician Sans (cap-height) y usarla
@@ -544,31 +530,30 @@ function actualizarPantalla(): void {
       lineContent.style.gap = `${gapPx}px`;
     }
 
-    console.log(
-      `[render] modo=${modoActual} LogMAR=${valorLogMarActual.toFixed(2)}`,
-      `nuevoTamanoPx=${nuevoTamanoPx.toFixed(1)}px`,
-      `gap=${gapPx.toFixed(1)}px`,
-      `visualHeight (SVG)=${visualRefPx.toFixed(1)}px`,
-      `ratio=${(visualRefPx / nuevoTamanoPx).toFixed(3)}`
-    );
-
     // Cantidad de optotipos:
-    //   LogMAR Estandarizada / LEA → SIEMPRE 5 (ISO 8596 estricto; el escalado
-    //     previo garantiza que caben)
-    //   ETDRS/Números/E Tumbling → máx 5 (estándar Ferris 1982)
-    const count = (esLogMAREstándar || esModoLEA)
-      ? 5
+    //   LogMAR Estandarizada / Números / LEA → 5 si caben al tamaño exacto;
+    //     si no, los que caben (el tamaño angular nunca se altera)
+    //   ETDRS/E Tumbling → máx 5 (estándar Ferris 1982)
+    const count = maxCabenExacto !== null
+      ? Math.min(5, maxCabenExacto)
       : calcularCantidadOptotipos(nuevoTamanoPx, 5);
+
+    if (maxCabenExacto !== null && count < 5) {
+      console.warn(
+        `[${modoActual}] LogMAR ${valorLogMarActual.toFixed(1)}: solo caben ` +
+        `${count}/5 optotipos al tamaño exacto — se preserva el tamaño angular (ISO 8596)`
+      );
+    }
 
     // Aleatorización por sesión — previene memorización (Bailey & Lovie 1976).
     // Se genera una vez al cargar la página y se mantiene fija hasta R.
     const key = sessionKey(modoActual, valorLogMarActual);
     if (!sessionLines.has(key)) {
       let tipo: LineType;
-      if (esModoLEA)                                     tipo = 'LEA';
-      else if (esModoETumbling)                          tipo = 'TUMBLING';
-      else if (!!settings.CARTILLAS_NUMEROS[modoActual]) tipo = 'NUMBERS';
-      else                                               tipo = 'LETTERS';
+      if (esModoLEA)            tipo = 'LEA';
+      else if (esModoETumbling) tipo = 'TUMBLING';
+      else if (esModoNumeros)   tipo = 'NUMBERS';
+      else                      tipo = 'LETTERS';
       sessionLines.set(key, generateRandomLine(5, tipo));
     }
     const lineText = sessionLines.get(key)!;
